@@ -4,7 +4,7 @@ import { awards, education, experience, interests, skills, studentTeams } from "
 import { ChainReactionGame } from "@/components/ChainReactionGame";
 import resumeDocument from "@/assets/documents/vince-osorio-resume.docx.asset.json";
 import projectPortfolio from "@/assets/documents/vince-osorio-project-portfolio.pdf.asset.json";
-import vinceProfile from "@/assets/vince-profile.jpg";
+import vincePhoto from "../assets/Vince_Osorio.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -94,9 +94,25 @@ function Index() {
                 analysis and multidisciplinary project work.
               </p>
             </div>
-            <div className="border-l-2 border-primary pl-5 font-mono text-xs uppercase leading-7 text-muted-foreground">
-              <p>Discipline: Mechanical Engineering</p>
-              <p>Location: Vancouver, BC</p>
+            <div className="animate-rise-in">
+              <div className="relative overflow-hidden border-2 border-border bg-card">
+                <img
+                  src={vincePhoto}
+                  alt="Vince Christian Osorio"
+                  className="h-[420px] w-full object-cover object-top"
+                />
+
+                <div className="absolute bottom-0 left-0 right-0 border-t border-border bg-background/90 px-4 py-3 backdrop-blur-sm">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">
+                    Vince Christian Osorio
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 border-l-2 border-primary pl-5 font-mono text-xs uppercase leading-7 text-muted-foreground">
+                <p>Discipline: Mechanical Engineering</p>
+                <p>Location: Vancouver, BC</p>
+              </div>
             </div>
           </div>
 
