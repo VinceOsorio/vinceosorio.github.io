@@ -145,9 +145,6 @@ function Index() {
             </a>
           </div>
 
-          <div id="game" className="scroll-mt-28 pt-12">
-            <ChainReactionGame />
-          </div>
         </div>
       </section>
 
@@ -423,6 +420,10 @@ function Index() {
           )}
         </div>
       </Section>
+
+      <div id="game" className="scroll-mt-28 pt-12">
+          <ChainReactionGame />
+      </div>
 
       <footer className="border-t border-border px-6 py-10 text-center font-mono text-xs uppercase text-muted-foreground">
         © {new Date().getFullYear()} Vince Christian Osorio · System nominal
