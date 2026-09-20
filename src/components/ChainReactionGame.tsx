@@ -91,14 +91,19 @@ export function ChainReactionGame() {
   const challenge = challenges[challengeIndex] ?? challenges[0];
   const [parts, setParts] = useState<Part[]>(challenge.fixedParts);
   const [selected, setSelected] = useState<PartType>("ramp");
-  const [ball, setBall] = useState<Ball>(challenge.start);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<"building" | "running" | "success" | "stopped">("building");
   const nextId = useRef(1);
   const animation = useRef<number | null>(null);
+  const ballElement = useRef<HTMLDivElement | null>(null);
   const liveBall = useRef<Ball>(challenge.start);
   const lastTime = useRef(0);
   const runStarted = useRef(0);
+
+  const drawBall = (next: Ball) => {
+    if (!ballElement.current) return;
+    ballElement.current.style.transform = `translate3d(${next.x - BALL_RADIUS}px, ${next.y - BALL_RADIUS}px, 0)`;
+  };
 
   const statusText = useMemo(() => {
     if (result === "success") return "Chain complete - target reached!";
@@ -110,7 +115,7 @@ export function ChainReactionGame() {
   const resetBall = () => {
     if (animation.current) cancelAnimationFrame(animation.current);
     liveBall.current = { ...challenge.start };
-    setBall({ ...challenge.start });
+    drawBall(challenge.start);
     setRunning(false);
     setResult("building");
     lastTime.current = 0;
@@ -127,8 +132,8 @@ export function ChainReactionGame() {
     const selectedChallenge = challenges[index] ?? challenges[0];
     setChallengeIndex(index);
     setParts(selectedChallenge.fixedParts);
-    setBall({ ...selectedChallenge.start });
     liveBall.current = { ...selectedChallenge.start };
+    requestAnimationFrame(() => drawBall(selectedChallenge.start));
     setRunning(false);
     setResult("building");
     lastTime.current = 0;
@@ -193,10 +198,12 @@ export function ChainReactionGame() {
             next.x = centre.x + nx * (25 + BALL_RADIUS);
             next.y = centre.y + ny * (25 + BALL_RADIUS);
             const approach = next.vx * nx + next.vy * ny;
-            next.vx -= 1.8 * approach * nx;
-            next.vy -= 1.8 * approach * ny;
-            next.vx += nx * 35;
-            next.vy += ny * 35;
+            if (approach < 0) {
+              next.vx -= 1.72 * approach * nx;
+              next.vy -= 1.72 * approach * ny;
+              next.vx += nx * 24;
+              next.vy += ny * 24;
+            }
           }
         } else if (part.type === "conveyor") {
           const top = centre.y - 13;
@@ -236,8 +243,9 @@ export function ChainReactionGame() {
 
       if (next.y + BALL_RADIUS > 332) {
         next.y = 332 - BALL_RADIUS;
-        next.vy = -Math.abs(next.vy) * 0.28;
-        next.vx *= 0.994;
+        next.vy = Math.abs(next.vy) < 28 ? 0 : -Math.abs(next.vy) * 0.22;
+        next.vx *= 0.988;
+        if (Math.abs(next.vx) < 2) next.vx = 0;
       }
       if (next.x - BALL_RADIUS < 0) {
         next.x = BALL_RADIUS;
@@ -250,7 +258,7 @@ export function ChainReactionGame() {
         next.y > challenge.bucket.y;
       if (inBucket) {
         liveBall.current = next;
-        setBall(next);
+        drawBall(next);
         setRunning(false);
         setResult("success");
         return;
@@ -263,7 +271,7 @@ export function ChainReactionGame() {
       }
 
       liveBall.current = next;
-      setBall(next);
+      drawBall(next);
       animation.current = requestAnimationFrame(step);
     };
 
@@ -422,10 +430,13 @@ export function ChainReactionGame() {
             })}
 
             <div
+              ref={ballElement}
               className="pointer-events-none absolute z-20 h-[18px] w-[18px] rounded-full border-2 border-white bg-primary shadow-[0_0_16px_rgba(80,170,255,0.8)]"
               style={{
-                left: `${((ball.x - BALL_RADIUS) / WIDTH) * 100}%`,
-                top: `${((ball.y - BALL_RADIUS) / HEIGHT) * 100}%`,
+                left: 0,
+                top: 0,
+                transform: `translate3d(${challenge.start.x - BALL_RADIUS}px, ${challenge.start.y - BALL_RADIUS}px, 0)`,
+                willChange: "transform",
               }}
             />
           </div>

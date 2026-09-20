@@ -222,6 +222,33 @@ function ProjectPage() {
           </div>
         )}
 
+        {project.gallerySections?.map((section) => (
+          <section key={section.title} className="mt-20 border-t border-border pt-10">
+            <p className="technical-label">Design evolution</p>
+            <h2 className="mt-3 text-3xl font-light text-starlight">{section.title}</h2>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-foreground/70">
+              {section.description}
+            </p>
+            <div className="mt-8 grid gap-5 sm:grid-cols-2">
+              {section.images.map((image, index) => (
+                <figure key={image.src}>
+                  <div className="overflow-hidden rounded-md border border-border bg-card">
+                    <img
+                      src={image.src}
+                      alt={image.alt}
+                      loading="lazy"
+                      className="aspect-[4/3] w-full object-contain"
+                    />
+                  </div>
+                  <figcaption className="mt-3 text-[10px] uppercase tracking-[0.18em] text-foreground/45">
+                    {section.title} · View {String(index + 1).padStart(2, "0")}
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </section>
+        ))}
+
         <footer className="mt-24 border-t border-border pt-10">
           <p className="text-xs uppercase tracking-[0.3em] text-foreground/50">Other projects</p>
           <div className="mt-6 grid gap-4 sm:grid-cols-3">

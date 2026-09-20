@@ -1,62 +1,79 @@
-import frc2020aAsset from "@/assets/projects/portfolio-000.jpg.asset.json";
-import frc2020bAsset from "@/assets/projects/portfolio-001.jpg.asset.json";
-import frc2020cAsset from "@/assets/projects/portfolio-002.jpg.asset.json";
-import frc2022aAsset from "@/assets/projects/portfolio-003.jpg.asset.json";
-import frc2022bAsset from "@/assets/projects/portfolio-004.jpg.asset.json";
-import frc2022cAsset from "@/assets/projects/portfolio-005.jpg.asset.json";
-import kart1Asset from "@/assets/projects/portfolio-006.jpg.asset.json";
-import kart2Asset from "@/assets/projects/portfolio-007.jpg.asset.json";
-import kart3Asset from "@/assets/projects/portfolio-008.jpg.asset.json";
-import rortv1Asset from "@/assets/projects/portfolio-009.jpg.asset.json";
-import rortv2Asset from "@/assets/projects/portfolio-011.jpg.asset.json";
-import rortv3Asset from "@/assets/projects/portfolio-012.jpg.asset.json";
-import frortv1Asset from "@/assets/projects/portfolio-013.jpg.asset.json";
-import frortv2Asset from "@/assets/projects/portfolio-014.jpg.asset.json";
-import frortv3Asset from "@/assets/projects/portfolio-015.jpg.asset.json";
-import rovSketchAsset from "@/assets/projects/portfolio-020.png.asset.json";
-import rovCadAsset from "@/assets/projects/portfolio-021.jpg.asset.json";
-import rovBuild1Asset from "@/assets/projects/portfolio-023.jpg.asset.json";
-import rovBuild2Asset from "@/assets/projects/portfolio-024.jpg.asset.json";
-import rovPrintAsset from "@/assets/projects/portfolio-025.png.asset.json";
-import rovFieldAsset from "@/assets/projects/portfolio-027.jpg.asset.json";
-import rovField2Asset from "@/assets/projects/portfolio-028.jpg.asset.json";
-import boatCodeAsset from "@/assets/projects/portfolio-029.jpg.asset.json";
-import boatNotesAsset from "@/assets/projects/portfolio-030.png.asset.json";
-import boatPlansAsset from "@/assets/projects/portfolio-031.png.asset.json";
-import outboardSketchAsset from "@/assets/projects/portfolio-032.png.asset.json";
-import outboardPlanAsset from "@/assets/projects/portfolio-033.png.asset.json";
-import subbots2025Asset from "@/assets/projects/portfolio-034.jpg.asset.json";
-import subbots2026Asset from "@/assets/projects/portfolio-036.jpg.asset.json";
+import frc2020aAsset from "@/assets/projects/portfolio-000.jpg";
+import frc2020bAsset from "@/assets/projects/portfolio-001.jpg";
+import frc2020cAsset from "@/assets/projects/portfolio-002.jpg";
+import frc2022aAsset from "@/assets/projects/portfolio-003.jpg";
+import frc2022bAsset from "@/assets/projects/portfolio-004.jpg";
+import frc2022cAsset from "@/assets/projects/portfolio-005.jpg";
+import kart1Asset from "@/assets/projects/portfolio-006.jpg";
+import kart2Asset from "@/assets/projects/portfolio-007.jpg";
+import kart3Asset from "@/assets/projects/portfolio-008.jpg";
+import rortv1Asset from "@/assets/projects/portfolio-009.jpg";
+import rortv2Asset from "@/assets/projects/portfolio-011.jpg";
+import rortv3Asset from "@/assets/projects/portfolio-012.jpg";
+import frortv1Asset from "@/assets/projects/portfolio-013.jpg";
+import frortv2Asset from "@/assets/projects/portfolio-014.jpg";
+import frortv3Asset from "@/assets/projects/portfolio-015.jpg";
+import rovSketchAsset from "@/assets/projects/portfolio-020.png";
+import rovCadAsset from "@/assets/projects/portfolio-021.jpg";
+import rovBuild1Asset from "@/assets/projects/portfolio-023.jpg";
+import rovBuild2Asset from "@/assets/projects/portfolio-024.jpg";
+import rovPrintAsset from "@/assets/projects/portfolio-025.png";
+import rovFieldAsset from "@/assets/projects/portfolio-027.jpg";
+import rovField2Asset from "@/assets/projects/portfolio-028.jpg";
+import boatCodeAsset from "@/assets/projects/portfolio-029.jpg";
+import boatNotesAsset from "@/assets/projects/portfolio-030.png";
+import boatPlansAsset from "@/assets/projects/portfolio-031.png";
+import outboardSketchAsset from "@/assets/projects/portfolio-032.png";
+import outboardPlanAsset from "@/assets/projects/portfolio-033.png";
+import subbots2025Asset from "@/assets/projects/portfolio-034.jpg";
+import subbots2026Asset from "@/assets/projects/portfolio-036.jpg";
+import railProject1Exterior from "@/assets/rail-speeder/project-1-exterior.png";
+import railProject1Interior from "@/assets/rail-speeder/project-1-interior.png";
+import railProject1Bottom from "@/assets/rail-speeder/project-1-bottom.png";
+import railProject2Cad from "@/assets/rail-speeder/project-2-cad.png";
+import railProject2Top from "@/assets/rail-speeder/project-2-top.jpg";
+import railProject2Isometric from "@/assets/rail-speeder/project-2-isometric.png";
+import railProject2Drawing from "@/assets/rail-speeder/project-2-drawing.jpg";
+import dronePrototype1Clamp from "@/assets/drone-payload/prototype-1-clamp.png";
+import dronePrototype1Payload from "@/assets/drone-payload/prototype-1-payload.png";
+import dronePrototype2Clamp from "@/assets/drone-payload/prototype-2-clamp.png";
+import dronePrototype2Payload from "@/assets/drone-payload/prototype-2-payload.png";
+import dronePrototype2Arm from "@/assets/drone-payload/prototype-2-arm.png";
+import droneFinalLid from "@/assets/drone-payload/final-lid.png";
+import droneFinalComponents from "@/assets/drone-payload/final-components.png";
+import droneFinalFront from "@/assets/drone-payload/final-drone-front.jpg";
+import droneFinalSide from "@/assets/drone-payload/final-drone-side.jpg";
+import droneFinalInstalled from "@/assets/drone-payload/final-drone-installed.jpg";
 
-const frc2020a = frc2020aAsset.url;
-const frc2020b = frc2020bAsset.url;
-const frc2020c = frc2020cAsset.url;
-const frc2022a = frc2022aAsset.url;
-const frc2022b = frc2022bAsset.url;
-const frc2022c = frc2022cAsset.url;
-const kart1 = kart1Asset.url;
-const kart2 = kart2Asset.url;
-const kart3 = kart3Asset.url;
-const rortv1 = rortv1Asset.url;
-const rortv2 = rortv2Asset.url;
-const rortv3 = rortv3Asset.url;
-const frortv1 = frortv1Asset.url;
-const frortv2 = frortv2Asset.url;
-const frortv3 = frortv3Asset.url;
-const rovSketch = rovSketchAsset.url;
-const rovCad = rovCadAsset.url;
-const rovBuild1 = rovBuild1Asset.url;
-const rovBuild2 = rovBuild2Asset.url;
-const rovPrint = rovPrintAsset.url;
-const rovField = rovFieldAsset.url;
-const rovField2 = rovField2Asset.url;
-const boatCode = boatCodeAsset.url;
-const boatNotes = boatNotesAsset.url;
-const boatPlans = boatPlansAsset.url;
-const outboardSketch = outboardSketchAsset.url;
-const outboardPlan = outboardPlanAsset.url;
-const subbots2025 = subbots2025Asset.url;
-const subbots2026 = subbots2026Asset.url;
+const frc2020a = frc2020aAsset;
+const frc2020b = frc2020bAsset;
+const frc2020c = frc2020cAsset;
+const frc2022a = frc2022aAsset;
+const frc2022b = frc2022bAsset;
+const frc2022c = frc2022cAsset;
+const kart1 = kart1Asset;
+const kart2 = kart2Asset;
+const kart3 = kart3Asset;
+const rortv1 = rortv1Asset;
+const rortv2 = rortv2Asset;
+const rortv3 = rortv3Asset;
+const frortv1 = frortv1Asset;
+const frortv2 = frortv2Asset;
+const frortv3 = frortv3Asset;
+const rovSketch = rovSketchAsset;
+const rovCad = rovCadAsset;
+const rovBuild1 = rovBuild1Asset;
+const rovBuild2 = rovBuild2Asset;
+const rovPrint = rovPrintAsset;
+const rovField = rovFieldAsset;
+const rovField2 = rovField2Asset;
+const boatCode = boatCodeAsset;
+const boatNotes = boatNotesAsset;
+const boatPlans = boatPlansAsset;
+const outboardSketch = outboardSketchAsset;
+const outboardPlan = outboardPlanAsset;
+const subbots2025 = subbots2025Asset;
+const subbots2026 = subbots2026Asset;
 
 export type ProjectStatus = "completed" | "ongoing" | "upcoming";
 export type Project = {
@@ -74,6 +91,11 @@ export type Project = {
   status: ProjectStatus;
   cover: string;
   gallery: string[];
+  gallerySections?: {
+    title: string;
+    description: string;
+    images: { src: string; alt: string }[];
+  }[];
   orbit: number;
   size: number;
   duration: number;
@@ -102,8 +124,8 @@ export const projects: Project[] = [
     stack: ["SOLIDWORKS", "ROV Design", "Design Reviews", "Waterproofing", "Team Leadership"],
     year: "2026 - Present",
     status: "ongoing",
-    cover: subbots2026,
-    gallery: [subbots2026],
+    cover: "",
+    gallery: [],
     orbit: 190,
     size: 84,
     duration: 30,
@@ -156,9 +178,10 @@ export const projects: Project[] = [
     focus: "Rail guidance, task planning and design documentation",
     outcome: "Two vehicle iterations completed within a two-month schedule",
     body: [
-      "Our team designed two versions of an autonomous vehicle intended to operate on rails and complete a series of challenges within a two-month project schedule.",
-      "I led the management and completion of more than 30 course tasks, contributed heavily to documentation and applied the engineering design process from requirements through evaluation.",
-      "The project required close collaboration across a seven-person team to keep mechanical development, controls and documentation aligned.",
+      "Our seven-person team designed two autonomous rail vehicles over a two-month schedule. The assignment combined mechanical design, electrical integration and controls with more than 30 course tasks, so managing dependencies and documenting decisions were as important as building the vehicle itself.",
+      "Project 1 established the basic architecture. Its covered chassis packaged the motor, motor mount, battery cases and electrical system around a mixed gear-and-belt drivetrain. Dedicated wheel and axle housings kept the vehicle aligned on the rails, while colour-matching and scraping wheels supported the course tasks.",
+      "Project 2 was a separate redesign rather than a photo variation of the first machine. It used a compact chassis, PICAXE motors, a compounding gearbox, timing pulleys and a timing belt. A sliding gear and motor mount made the drivetrain easier to position and tune, while the battery pack and bearings were integrated into a cleaner prototype layout.",
+      "I coordinated task completion, contributed to the mechanical design and produced detailed CAD, drawings and annotated diagrams. The two iterations taught me to treat documentation as part of the engineering work: clear layouts made it easier for the team to review packaging, identify interfaces and carry lessons from one version into the next.",
     ],
     stack: [
       "Mechanical Design",
@@ -168,8 +191,34 @@ export const projects: Project[] = [
     ],
     year: "2025",
     status: "completed",
-    cover: "",
+    cover: railProject1Exterior,
     gallery: [],
+    gallerySections: [
+      {
+        title: "Project 1 · First Rail Speeder",
+        description:
+          "The first version established the covered chassis, rail guidance and gear-and-belt drivetrain. These images come only from the Project 1 design document.",
+        images: [
+          { src: railProject1Exterior, alt: "Project 1 rail speeder exterior top view" },
+          { src: railProject1Interior, alt: "Project 1 rail speeder annotated internal top view" },
+          { src: railProject1Bottom, alt: "Project 1 rail speeder annotated bottom view" },
+        ],
+      },
+      {
+        title: "Project 2 · Final Rail Speeder",
+        description:
+          "The second version introduced a revised chassis, compounding gearbox and timing-belt drive. These images come only from the Project 2 final-vehicle document.",
+        images: [
+          { src: railProject2Cad, alt: "Project 2 rail speeder annotated CAD assembly" },
+          { src: railProject2Top, alt: "Project 2 rail speeder annotated prototype top view" },
+          {
+            src: railProject2Isometric,
+            alt: "Project 2 rail speeder annotated prototype isometric view",
+          },
+          { src: railProject2Drawing, alt: "Project 2 rail speeder SolidWorks drawing" },
+        ],
+      },
+    ],
     orbit: 300,
     size: 62,
     duration: 54,
@@ -251,9 +300,11 @@ export const projects: Project[] = [
     focus: "Transmission design, vehicle analysis and fire-suppression integration",
     outcome: "Team A2 produced the top-performing FRORTV in the final competition",
     body: [
-      "For RORTV, our six-person team built an RC vehicle that could navigate obstacles while its engine remained running throughout the course. We used a continuously variable transmission to change speed and torque and disconnect the output from the axle when stopped.",
-      "For FRORTV, we added electronic speed control and a water-delivery system capable of extinguishing candle fires up to 0.8 m above the ground.",
-      "I designed the drive system in SOLIDWORKS, supported gear-ratio, speed, climb-height and centre-of-gravity analysis, and contributed to the engineering-design documentation. Team A2 produced the top-performing FRORTV.",
+      "RORTV began as a six-person remote-control vehicle project built around a demanding obstacle course. The engine had to remain running throughout the course, so the drivetrain needed a way to vary speed and torque while also disconnecting the output from the axle when the vehicle stopped.",
+      "Our solution used a continuously variable transmission. I designed the drive system in SOLIDWORKS and supported the calculations for gear ratio, vehicle speed, climb height and centre of gravity. The project connected CAD and analysis directly to practical questions about traction, clearance and stability.",
+      "FRORTV carried those lessons into a second vehicle. Electronic speed controllers were now permitted, giving the team more direct control of the drivetrain, and the challenge added a water-delivery system that had to extinguish crown fires represented by candles up to 0.8 metres above the ground.",
+      "Because the team already understood the underlying vehicle platform, we were able to plan the redesign quickly and spend more time integrating the pump, reservoir and delivery mechanism with the moving chassis. That integration required balancing reach and water capacity against stability and manoeuvrability.",
+      "I contributed to mechanical design, vehicle analysis and the engineering-design documentation across both versions. Team A2's FRORTV was the top-performing vehicle in the final competition, showing how knowledge carried forward from the first project improved the second design.",
     ],
     stack: ["SOLIDWORKS", "CVT", "Vehicle Dynamics", "Electronic Speed Control", "Design Process"],
     year: "2024",
@@ -278,15 +329,28 @@ export const projects: Project[] = [
     focus: "Sensor integration, payload CAD and engineering documentation",
     outcome: "A documented environmental-sensing payload concept and prototype",
     body: [
-      "This was my first university engineering project and focused on following and documenting the engineering design process from problem definition through evaluation.",
-      "I used Fusion 360 and SOLIDWORKS to create payload prototypes and programmed sensors and a servo motor using a microcontroller.",
-      "Our team delivered two progress reports, a final report and a presentation explaining our design decisions and results.",
+      "This was my first university engineering project. Our four-person A.E.R.O. team designed a UAV payload for environmental surveying on a DJI Mavic 2 Enterprise platform, following the engineering design process from problem definition and early prototypes through flight evaluation.",
+      "The first prototype proved that a clamped payload could resist significant loads, but its flat clamp did not match the drone body's curvature. Its electronics box also had excess space and sat too tall. We kept the core attachment concept and used those fit and packaging problems to guide the next iteration.",
+      "Prototype 2 introduced curved clamps lined with foam for a more secure fit, a compact payload body with slide-in housings, and a raised base that kept the drone's power button accessible. A nut-and-bolt attachment joined the clamps to the payload, while an extending servo-driven arm moved the pressure sensor away from propeller wash.",
+      "The final design added a snap-on lid to retain the components while preserving a slot for the rotating sensor arm. The interior remained accessible for assembly and maintenance, and the complete payload was used for flight testing rather than remaining only a CAD concept.",
+      "Across two flight tests, the sensors successfully logged atmospheric pressure, altitude and temperature to a microSD card. The team also captured landscape video and discovered that the drone's infrared sensor could record heat signatures. A flight plan created between tests improved preparation, while a missed video recording on the second flight highlighted the need for explicit pre-flight checks.",
+      "I contributed to payload CAD in Fusion 360 and SOLIDWORKS, programmed the sensors and servo motor through a microcontroller, and helped produce two progress reports, a final report and a presentation documenting our design decisions and results.",
     ],
     stack: ["Fusion 360", "SOLIDWORKS", "Microcontrollers", "Sensors", "Servo Motor"],
     year: "2023",
     status: "completed",
-    cover: "",
-    gallery: [],
+    cover: droneFinalInstalled,
+    gallery: [
+      droneFinalFront,
+      droneFinalSide,
+      dronePrototype1Payload,
+      dronePrototype2Clamp,
+      droneFinalLid,
+      droneFinalComponents,
+      dronePrototype2Arm,
+      dronePrototype1Clamp,
+      dronePrototype2Payload,
+    ],
     orbit: 420,
     size: 56,
     duration: 86,
@@ -309,6 +373,7 @@ export const projects: Project[] = [
       "This was my first project using MIG welding. I learned how joint preparation, fixture setup and weld sequence affected both the strength and final geometry of the frame. I also gained experience with a mill and lathe while producing smaller mechanical parts such as the driveshaft and tie rods.",
       "The electrical drive components were prepared by our teacher, so my main contribution was on the mechanical and fabrication side. I helped fit the steering, axle and supporting parts to the chassis and worked through small alignment issues during assembly.",
       "The project gave me an early appreciation for manufacturing tolerances: a design can look correct in a sketch, but small fabrication errors can create noticeable problems when bearings, shafts and steering parts must all line up.",
+      "Working as a six-student fabrication team also taught me to plan around shared machines and partially dependent tasks. Chassis work, machined parts and vehicle assembly had to progress in an order that avoided blocking another teammate, which made communication on the shop floor part of the technical work.",
     ],
     stack: ["MIG Welding", "Lathe", "Mill", "Steel Fabrication", "Vehicle Assembly"],
     year: "2022",
@@ -333,9 +398,10 @@ export const projects: Project[] = [
     focus: "Robot integration, CAD and team coordination",
     outcome: "A completed competition robot and stronger team onboarding process",
     body: [
-      "After the 2021 competition was cancelled, I returned to a team with many new members and took on a larger leadership and project-management role.",
-      "I focused on mechanical and electrical systems, CAD modelling, organization and research while helping new members understand the competition and their tasks.",
-      "The season taught me to learn tasks thoroughly before delegating them, which made my leadership clearer and more effective.",
+      "After the 2021 season was cancelled, I returned to a team whose experienced members had largely graduated or become unavailable. I stepped into a larger leadership and project-management role and helped rebuild the team's working structure around many new students.",
+      "I welcomed new members, translated the season challenge into clear mechanical and electrical tasks, and matched responsibilities to each person's experience. My own work focused on fabrication, electrical integration, CAD modelling, organization and the research needed to support design choices.",
+      "Because so much knowledge had left with the previous team, teaching became part of the build process. I learned each task before delegating it so I could explain the goal, review the work and help troubleshoot without taking the opportunity away from a newer member.",
+      "The season strengthened my CAD skills and changed how I approach leadership. Good delegation is not simply assigning work; it requires enough technical understanding to set expectations, identify interfaces and give a teammate the context needed to succeed.",
     ],
     stack: ["Robotics", "CAD", "Fabrication", "Electrical Integration", "Team Leadership"],
     year: "2022",
@@ -360,9 +426,10 @@ export const projects: Project[] = [
     focus: "Fabrication, wiring and competition mechanism development",
     outcome: "First complete competition robot and foundation for later engineering work",
     body: [
-      "My high-school engineering teacher introduced me to FIRST Robotics, where students in grades 10-12 collaborated on a robot for that year's challenge.",
-      "Our design focused on collecting up to five balls, delivering them to scoring locations, controlling a colour wheel and climbing and balancing on a bar.",
-      "I contributed to mechanical fabrication, component sourcing and electrical wiring. The experience sparked my interest in engineering and gave me a foundation for later robotics projects.",
+      "My high-school engineering teacher introduced me to FIRST Robotics, where students in grades 10-12 collaborated under a fixed competition schedule to turn a new game challenge into a working robot.",
+      "The 2020 game asked robots to collect as many as five balls, deliver or shoot them into scoring locations, manipulate a colour wheel, and climb and balance with other robots at the end of a match. Our team concentrated its effort on reliable ball handling, selected scoring capability and the climbing task so the scope remained achievable.",
+      "I contributed to mechanical fabrication, component sourcing and electrical wiring. I was not responsible for programming, which allowed me to focus on how mechanisms were built, how motors and sensors connected, and how the electrical system supported the moving assemblies.",
+      "This was the project that first made engineering feel tangible to me. Seeing fabricated parts, wiring and team decisions become a competition machine gave me the foundation for later robotics, vehicle and marine projects.",
     ],
     stack: ["Robotics", "Fabrication", "Electrical Wiring", "Component Sourcing", "Teamwork"],
     year: "2020",
