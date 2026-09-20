@@ -4,19 +4,20 @@ import { awards, education, experience, interests, skills, studentTeams } from "
 import { ChainReactionGame } from "@/components/ChainReactionGame";
 import resumeDocument from "@/assets/documents/vince-osorio-resume.docx.asset.json";
 import projectPortfolio from "@/assets/documents/vince-osorio-project-portfolio.pdf.asset.json";
+import vinceProfile from "@/assets/vince-profile.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Vince Osorio's Engineering Portfolio" },
+      { title: "Vince Christian Osorio's Engineering Portfolio" },
       {
         name: "description",
         content:
-          "Portfolio of Vince Osorio, UBC Mechanical Engineering student and UBC Subbots Mechanical Projects Lead.",
+          "Portfolio of Vince Christian Osorio, UBC Mechanical Engineering student and UBC Subbots Mechanical Projects Lead.",
       },
       {
         property: "og:title",
-        content: "Vince Osorio's Engineering Portfolio",
+        content: "Vince Christian Osorio's Engineering Portfolio",
       },
       {
         property: "og:description",
@@ -84,9 +85,9 @@ function Index() {
         <div className="mx-auto max-w-5xl">
           <div className="grid items-end gap-10 border-b-2 border-border pb-10 lg:grid-cols-[1.3fr_0.7fr]">
             <div className="animate-rise-in">
-              <p className="technical-label">Mechanical Engineering · Naval Architecture · UBC</p>
+              <p className="technical-label">Mechanical Engineering · Naval Architecture and Marine Engineering · UBC</p>
               <h1 className="mt-5 text-6xl font-extrabold uppercase leading-none text-starlight sm:text-7xl lg:text-8xl">
-                Vince <span className="text-primary">Osorio</span>
+                Vince Christian <span className="text-primary">Osorio</span>
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-relaxed text-foreground/80 sm:text-lg">
                 Designing marine, robotic and mechanical systems through hands-on prototyping,
@@ -94,10 +95,8 @@ function Index() {
               </p>
             </div>
             <div className="border-l-2 border-primary pl-5 font-mono text-xs uppercase leading-7 text-muted-foreground">
-              <p>System: Portfolio / 2026</p>
-              <p>Discipline: Mechanical systems</p>
+              <p>Discipline: Mechanical Engineering</p>
               <p>Location: Vancouver, BC</p>
-              <p className="text-primary">Status: Building</p>
             </div>
           </div>
 
