@@ -1,6 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
-type PartType = "ramp" | "bumper" | "conveyor" | "launcher";
+type PartType =
+  | "ramp"
+  | "bumper"
+  | "conveyor"
+  | "launcher";
 
 type Part = {
   id: number;
@@ -31,39 +40,56 @@ type Challenge = {
   fixedParts: Part[];
 };
 
+/* =========================================================
+   GAME COORDINATE SYSTEM
+
+   Everything inside the actual game uses these same
+   coordinates. CSS then scales the entire 720 x 360 surface.
+   ========================================================= */
+
 const WIDTH = 720;
 const HEIGHT = 360;
+
 const COLS = 9;
 const ROWS = 4;
 
 const CELL_W = WIDTH / COLS;
 const CELL_H = 70;
 const GRID_TOP = 38;
-const FLOOR_Y = 332;
-const BALL_RADIUS = 9;
 
-const GRAVITY = 205;
+const FLOOR_Y = 332;
+
+const BALL_RADIUS = 8;
+
+const GRAVITY = 210;
 const MAX_PARTS = 10;
 
 const partLabels: Record<
   PartType,
-  { name: string; hint: string; icon: string }
+  {
+    name: string;
+    hint: string;
+    icon: string;
+  }
 > = {
   ramp: {
     name: "Ramp",
     hint: "Guides the ball",
     icon: "╱",
   },
+
   bumper: {
     name: "Bumper",
     hint: "Bounces the ball",
     icon: "●",
   },
+
   conveyor: {
     name: "Conveyor",
     hint: "Adds horizontal speed",
     icon: "▰",
   },
+
   launcher: {
     name: "Launcher",
     hint: "Kicks the ball upward",
@@ -71,39 +97,72 @@ const partLabels: Record<
   },
 };
 
+/* =========================================================
+   CHALLENGES
+   ========================================================= */
+
 const challenges = [
   {
     name: "Workshop Warm-up",
+
     description:
       "Guide the ball across the shop floor into the bucket on the right.",
-    start: { x: 45, y: 42, vx: 55, vy: 0 },
-    bucket: { x: 643, y: 274, width: 57, height: 58 },
-    fixedParts: [
-        {
-          id: -1,
-          type: "ramp",
-          col: 1,
-          row: 1,
-          flipped: false,
-          locked: true,
-        },
-        {
-          id: -2,
-          type: "bumper",
-          col: 3,
-          row: 3,
-          flipped: false,
-          locked: true,
-        },
-      ],
+
+    start: {
+      x: 45,
+      y: 42,
+      vx: 55,
+      vy: 0,
     },
+
+    bucket: {
+      x: 643,
+      y: 274,
+      width: 57,
+      height: 58,
+    },
+
+    fixedParts: [
+      {
+        id: -1,
+        type: "ramp",
+        col: 1,
+        row: 1,
+        flipped: false,
+        locked: true,
+      },
+
+      {
+        id: -2,
+        type: "bumper",
+        col: 3,
+        row: 3,
+        flipped: false,
+        locked: true,
+      },
+    ],
+  },
 
   {
     name: "High Bucket",
+
     description:
       "Use launchers and bumpers to reach the raised bucket.",
-    start: { x: 48, y: 250, vx: 68, vy: 0 },
-    bucket: { x: 635, y: 102, width: 60, height: 58 },
+
+    start: {
+      x: 48,
+      y: 250,
+      vx: 68,
+      vy: 0,
+    },
+
+    bucket: {
+      x: 635,
+      y: 102,
+      width: 60,
+      height: 58,
+    },
+
     fixedParts: [
       {
         id: -3,
@@ -113,6 +172,7 @@ const challenges = [
         flipped: false,
         locked: true,
       },
+
       {
         id: -4,
         type: "launcher",
@@ -126,10 +186,24 @@ const challenges = [
 
   {
     name: "Reverse Run",
+
     description:
       "The ball starts on the right and the target is on the left.",
-    start: { x: 674, y: 48, vx: -58, vy: 0 },
-    bucket: { x: 20, y: 274, width: 58, height: 58 },
+
+    start: {
+      x: 674,
+      y: 48,
+      vx: -58,
+      vy: 0,
+    },
+
+    bucket: {
+      x: 20,
+      y: 274,
+      width: 58,
+      height: 58,
+    },
+
     fixedParts: [
       {
         id: -5,
@@ -139,6 +213,7 @@ const challenges = [
         flipped: true,
         locked: true,
       },
+
       {
         id: -6,
         type: "bumper",
@@ -147,6 +222,7 @@ const challenges = [
         flipped: false,
         locked: true,
       },
+
       {
         id: -7,
         type: "conveyor",
@@ -160,10 +236,24 @@ const challenges = [
 
   {
     name: "Zigzag Drop",
+
     description:
       "Navigate alternating fixed ramps to reach a centre bucket.",
-    start: { x: 54, y: 38, vx: 48, vy: 0 },
-    bucket: { x: 332, y: 274, width: 58, height: 58 },
+
+    start: {
+      x: 54,
+      y: 38,
+      vx: 48,
+      vy: 0,
+    },
+
+    bucket: {
+      x: 332,
+      y: 274,
+      width: 58,
+      height: 58,
+    },
+
     fixedParts: [
       {
         id: -8,
@@ -173,6 +263,7 @@ const challenges = [
         flipped: false,
         locked: true,
       },
+
       {
         id: -9,
         type: "ramp",
@@ -181,6 +272,7 @@ const challenges = [
         flipped: true,
         locked: true,
       },
+
       {
         id: -10,
         type: "ramp",
@@ -193,51 +285,111 @@ const challenges = [
   },
 ] satisfies [Challenge, ...Challenge[]];
 
+/* =========================================================
+   HELPERS
+   ========================================================= */
+
 function partPosition(part: Part) {
   return {
     x: part.col * CELL_W + CELL_W / 2,
-    y: GRID_TOP + part.row * CELL_H + CELL_H / 2,
+
+    y:
+      GRID_TOP +
+      part.row * CELL_H +
+      CELL_H / 2,
   };
 }
 
-export function ChainReactionGame() {
-  const [challengeIndex, setChallengeIndex] = useState(0);
-  const challenge = challenges[challengeIndex] ?? challenges[0];
+function clamp(
+  value: number,
+  min: number,
+  max: number,
+) {
+  return Math.max(min, Math.min(max, value));
+}
 
-  const [parts, setParts] = useState<Part[]>(challenge.fixedParts);
-  const [selected, setSelected] = useState<PartType>("ramp");
-  const [running, setRunning] = useState(false);
+/* =========================================================
+   GAME COMPONENT
+   ========================================================= */
+
+export function ChainReactionGame() {
+  const [challengeIndex, setChallengeIndex] =
+    useState(0);
+
+  const challenge =
+    challenges[challengeIndex] ??
+    challenges[0];
+
+  const [parts, setParts] = useState<Part[]>(
+    challenge.fixedParts,
+  );
+
+  const [selected, setSelected] =
+    useState<PartType>("ramp");
+
+  const [running, setRunning] =
+    useState(false);
 
   const [result, setResult] = useState<
-    "building" | "running" | "success" | "stopped"
+    | "building"
+    | "running"
+    | "success"
+    | "stopped"
   >("building");
 
-  const [removeMode, setRemoveMode] = useState(false);
-  const [activePart, setActivePart] = useState<number | null>(null);
+  const [removeMode, setRemoveMode] =
+    useState(false);
+
+  const [activePart, setActivePart] =
+    useState<number | null>(null);
 
   const nextId = useRef(1);
-  const animation = useRef<number | null>(null);
-  const ballElement = useRef<HTMLDivElement | null>(null);
 
-  const liveBall = useRef<Ball>({ ...challenge.start });
+  const animation =
+    useRef<number | null>(null);
+
+  const ballElement =
+    useRef<HTMLDivElement | null>(null);
+
+  const liveBall = useRef<Ball>({
+    ...challenge.start,
+  });
+
   const lastTime = useRef(0);
   const runStarted = useRef(0);
-
   const stillTime = useRef(0);
 
-  // Prevent the same launcher / bumper from triggering
-  // repeatedly while the ball is still touching it.
-  const collisionCooldown = useRef<Record<number, number>>({});
+  const collisionCooldown = useRef<
+    Record<number, number>
+  >({});
 
-  const drawBall = (next: Ball) => {
-    if (!ballElement.current) return;
+  /* =======================================================
+     BALL DRAWING
 
-    ballElement.current.style.transform = `translate3d(
-      ${next.x - BALL_RADIUS}px,
-      ${next.y - BALL_RADIUS}px,
-      0
-    )`;
+     IMPORTANT:
+     Physics coordinates are converted to percentages here.
+
+     This means the visual ball stays aligned with the
+     720 x 360 physics world at every screen size.
+     ======================================================= */
+
+  const drawBall = (ball: Ball) => {
+    const element = ballElement.current;
+
+    if (!element) return;
+
+    element.style.left = `${
+      (ball.x / WIDTH) * 100
+    }%`;
+
+    element.style.top = `${
+      (ball.y / HEIGHT) * 100
+    }%`;
   };
+
+  /* =======================================================
+     STATUS MESSAGE
+     ======================================================= */
 
   const statusText = useMemo(() => {
     if (result === "success") {
@@ -259,155 +411,214 @@ export function ChainReactionGame() {
     return "Select a component, then place it on the grid.";
   }, [result, removeMode]);
 
+  /* =======================================================
+     RESET BALL
+     ======================================================= */
+
   const resetBall = () => {
-    if (animation.current) {
-      cancelAnimationFrame(animation.current);
+    if (animation.current !== null) {
+      cancelAnimationFrame(
+        animation.current,
+      );
     }
 
-    liveBall.current = { ...challenge.start };
+    animation.current = null;
+
+    liveBall.current = {
+      ...challenge.start,
+    };
+
+    collisionCooldown.current = {};
+
+    stillTime.current = 0;
+    lastTime.current = 0;
+    runStarted.current = 0;
+
+    setRunning(false);
+    setResult("building");
+    setActivePart(null);
 
     requestAnimationFrame(() => {
       drawBall(challenge.start);
     });
+  };
+
+  /* =======================================================
+     CLEAR MACHINE
+     ======================================================= */
+
+  const clearMachine = () => {
+    resetBall();
+
+    setParts([
+      ...challenge.fixedParts,
+    ]);
+
+    setRemoveMode(false);
+  };
+
+  /* =======================================================
+     CHANGE CHALLENGE
+     ======================================================= */
+
+  const selectChallenge = (
+    index: number,
+  ) => {
+    if (animation.current !== null) {
+      cancelAnimationFrame(
+        animation.current,
+      );
+    }
+
+    animation.current = null;
+
+    const nextChallenge =
+      challenges[index] ??
+      challenges[0];
+
+    setChallengeIndex(index);
+
+    setParts([
+      ...nextChallenge.fixedParts,
+    ]);
+
+    liveBall.current = {
+      ...nextChallenge.start,
+    };
 
     collisionCooldown.current = {};
+
     stillTime.current = 0;
     lastTime.current = 0;
     runStarted.current = 0;
 
     setRunning(false);
     setResult("building");
-    setActivePart(null);
-  };
-
-  const clearMachine = () => {
-    resetBall();
-    setParts(challenge.fixedParts);
     setRemoveMode(false);
-  };
-
-  const selectChallenge = (index: number) => {
-    if (animation.current) {
-      cancelAnimationFrame(animation.current);
-    }
-
-    const nextChallenge = challenges[index] ?? challenges[0];
-
-    setChallengeIndex(index);
-    setParts(nextChallenge.fixedParts);
-
-    liveBall.current = { ...nextChallenge.start };
+    setActivePart(null);
 
     requestAnimationFrame(() => {
       drawBall(nextChallenge.start);
     });
-
-    collisionCooldown.current = {};
-    stillTime.current = 0;
-    lastTime.current = 0;
-    runStarted.current = 0;
-
-    setRunning(false);
-    setResult("building");
-    setRemoveMode(false);
-    setActivePart(null);
   };
+
+  /* =======================================================
+     PLACE COMPONENT
+
+     Pointer events work with:
+     - mouse
+     - touchscreen
+     - stylus
+     ======================================================= */
 
   const placePart = (
     event: React.PointerEvent<HTMLDivElement>,
   ) => {
-    if (running || removeMode) return;
+    if (running || removeMode) {
+      return;
+    }
 
-    const bounds = event.currentTarget.getBoundingClientRect();
+    const bounds =
+      event.currentTarget.getBoundingClientRect();
+
+    /*
+     Convert the click/tap from the responsive CSS size
+     back into the 720 x 360 physics coordinate system.
+    */
 
     const x =
-      ((event.clientX - bounds.left) / bounds.width) * WIDTH;
+      ((event.clientX - bounds.left) /
+        bounds.width) *
+      WIDTH;
 
     const y =
-      ((event.clientY - bounds.top) / bounds.height) * HEIGHT;
+      ((event.clientY - bounds.top) /
+        bounds.height) *
+      HEIGHT;
 
     if (
       y < GRID_TOP ||
-      y > GRID_TOP + ROWS * CELL_H
+      y >
+        GRID_TOP +
+          ROWS * CELL_H
     ) {
       return;
     }
 
-    const col = Math.max(
+    const col = clamp(
+      Math.floor(x / CELL_W),
       0,
-      Math.min(
-        COLS - 1,
-        Math.floor(x / CELL_W),
-      ),
+      COLS - 1,
     );
 
-    const row = Math.max(
+    const row = clamp(
+      Math.floor(
+        (y - GRID_TOP) /
+          CELL_H,
+      ),
       0,
-      Math.min(
-        ROWS - 1,
-        Math.floor((y - GRID_TOP) / CELL_H),
-      ),
+      ROWS - 1,
     );
-
-    const startCol = Math.floor(
-      challenge.start.x / CELL_W,
-    );
-
-    const startRow = Math.floor(
-      (challenge.start.y - GRID_TOP) / CELL_H,
-    );
-
-    if (
-      col === startCol &&
-      row === Math.max(0, startRow)
-    ) {
-      return;
-    }
 
     setParts((current) => {
-      const existing = current.find(
+      const occupied = current.some(
         (part) =>
           part.col === col &&
           part.row === row,
       );
 
-      if (existing) {
+      if (occupied) {
         return current;
       }
 
-      const userPartCount = current.filter(
-        (part) => !part.locked,
-      ).length;
+      const userParts =
+        current.filter(
+          (part) => !part.locked,
+        );
 
-      if (userPartCount >= MAX_PARTS) {
+      if (
+        userParts.length >=
+        MAX_PARTS
+      ) {
         return current;
       }
+
+      const newPart: Part = {
+        id: nextId.current++,
+        type: selected,
+        col,
+        row,
+        flipped: false,
+      };
 
       return [
         ...current,
-        {
-          id: nextId.current++,
-          type: selected,
-          col,
-          row,
-          flipped: false,
-        },
+        newPart,
       ];
     });
   };
+
+  /* =======================================================
+     ROTATE / REMOVE
+     ======================================================= */
 
   const rotatePart = (id: number) => {
     if (running) return;
 
     setParts((current) =>
-      current.map((part) =>
-        part.id === id && !part.locked
-          ? {
-              ...part,
-              flipped: !part.flipped,
-            }
-          : part,
-      ),
+      current.map((part) => {
+        if (
+          part.id !== id ||
+          part.locked
+        ) {
+          return part;
+        }
+
+        return {
+          ...part,
+          flipped: !part.flipped,
+        };
+      }),
     );
   };
 
@@ -417,7 +628,8 @@ export function ChainReactionGame() {
     setParts((current) =>
       current.filter(
         (part) =>
-          part.id !== id || part.locked,
+          part.id !== id ||
+          part.locked,
       ),
     );
   };
@@ -428,7 +640,12 @@ export function ChainReactionGame() {
   ) => {
     event.stopPropagation();
 
-    if (running || part.locked) return;
+    if (
+      running ||
+      part.locked
+    ) {
+      return;
+    }
 
     if (removeMode) {
       removePart(part.id);
@@ -438,6 +655,10 @@ export function ChainReactionGame() {
     rotatePart(part.id);
   };
 
+  /* =======================================================
+     PHYSICS
+     ======================================================= */
+
   useEffect(() => {
     if (!running) return;
 
@@ -446,62 +667,118 @@ export function ChainReactionGame() {
         runStarted.current = time;
       }
 
+      const previousTime =
+        lastTime.current || time;
+
       const rawDt =
-        (time - (lastTime.current || time)) /
+        (time - previousTime) /
         1000;
 
-      const frameDt = Math.min(rawDt, 0.032);
+      /*
+       Cap large frame gaps.
+
+       This stops physics from exploding when:
+       - browser stutters
+       - mobile frame rate drops
+       - tab temporarily loses focus
+      */
+
+      const frameDt = Math.min(
+        rawDt,
+        0.032,
+      );
 
       lastTime.current = time;
 
       /*
-       * Several smaller physics steps per visual frame.
-       * This prevents the ball from jumping through ramps
-       * and makes collisions much more consistent.
-       */
-      const substeps = 4;
-      const dt = frameDt / substeps;
+       Multiple smaller physics steps produce much more
+       reliable collision detection.
+      */
 
-      let next = { ...liveBall.current };
+      const SUBSTEPS = 5;
 
-      for (let stepIndex = 0; stepIndex < substeps; stepIndex++) {
+      const dt =
+        frameDt / SUBSTEPS;
+
+      let next = {
+        ...liveBall.current,
+      };
+
+      for (
+        let substep = 0;
+        substep < SUBSTEPS;
+        substep++
+      ) {
+        /* -----------------------
+           GRAVITY
+           ----------------------- */
+
         next.vy += GRAVITY * dt;
 
         next.x += next.vx * dt;
         next.y += next.vy * dt;
 
+        /* -----------------------
+           COMPONENT COLLISIONS
+           ----------------------- */
+
         for (const part of parts) {
-          const centre = partPosition(part);
+          const centre =
+            partPosition(part);
 
           const cooldownUntil =
-            collisionCooldown.current[part.id] ?? 0;
+            collisionCooldown.current[
+              part.id
+            ] ?? 0;
 
-          /*
-           * BUMPER
-           */
-          if (part.type === "bumper") {
-            const dx = next.x - centre.x;
-            const dy = next.y - centre.y;
+          /* =====================
+             BUMPER
+             ===================== */
 
-            const distance = Math.hypot(dx, dy);
+          if (
+            part.type ===
+            "bumper"
+          ) {
+            const dx =
+              next.x - centre.x;
+
+            const dy =
+              next.y - centre.y;
+
+            const distance =
+              Math.hypot(dx, dy);
+
+            const bumperRadius = 18;
+
             const collisionDistance =
-              25 + BALL_RADIUS;
+              bumperRadius +
+              BALL_RADIUS;
 
             if (
-              distance < collisionDistance &&
+              distance <
+                collisionDistance &&
               distance > 0
             ) {
-              const nx = dx / distance;
-              const ny = dy / distance;
+              const nx =
+                dx / distance;
 
-              // Push ball outside bumper first.
+              const ny =
+                dy / distance;
+
+              /*
+               Push ball outside the bumper first.
+               Prevents vibration/sticking.
+              */
+
               next.x =
                 centre.x +
-                nx * collisionDistance;
+                nx *
+                  collisionDistance;
 
               next.y =
                 centre.y +
-                ny * collisionDistance;
+                ny *
+                  collisionDistance;
 
               const approach =
                 next.vx * nx +
@@ -509,361 +786,579 @@ export function ChainReactionGame() {
 
               if (
                 approach < 0 &&
-                time >= cooldownUntil
+                time >=
+                  cooldownUntil
               ) {
-                const bounce = 1.55;
+                const restitution =
+                  1.55;
 
                 next.vx -=
-                  bounce * approach * nx;
+                  restitution *
+                  approach *
+                  nx;
 
                 next.vy -=
-                  bounce * approach * ny;
+                  restitution *
+                  approach *
+                  ny;
 
-                // Small extra kick makes bumper feel responsive.
-                next.vx += nx * 18;
-                next.vy += ny * 18;
+                next.vx +=
+                  nx * 15;
+
+                next.vy +=
+                  ny * 15;
 
                 collisionCooldown.current[
                   part.id
-                ] = time + 90;
+                ] =
+                  time + 100;
 
-                setActivePart(part.id);
+                setActivePart(
+                  part.id,
+                );
 
-                window.setTimeout(() => {
-                  setActivePart((current) =>
-                    current === part.id
-                      ? null
-                      : current,
-                  );
-                }, 110);
+                window.setTimeout(
+                  () => {
+                    setActivePart(
+                      (current) =>
+                        current ===
+                        part.id
+                          ? null
+                          : current,
+                    );
+                  },
+                  120,
+                );
               }
             }
 
             continue;
           }
 
-          /*
-           * CONVEYOR
-           */
-          if (part.type === "conveyor") {
-            const top = centre.y - 13;
+          /* =====================
+             CONVEYOR
+             ===================== */
+
+          if (
+            part.type ===
+            "conveyor"
+          ) {
+            const halfWidth = 28;
+
+            const surfaceY =
+              centre.y - 8;
+
+            const horizontal =
+              Math.abs(
+                next.x -
+                  centre.x,
+              ) <= halfWidth;
+
+            const touching =
+              next.y +
+                BALL_RADIUS >=
+                surfaceY - 3 &&
+              next.y +
+                BALL_RADIUS <=
+                surfaceY + 8;
 
             if (
-              Math.abs(next.x - centre.x) < 35 &&
-              next.y + BALL_RADIUS >= top &&
-              next.y + BALL_RADIUS <= top + 12 &&
-              next.vy >= -10
+              horizontal &&
+              touching &&
+              next.vy >= -15
             ) {
               next.y =
-                top - BALL_RADIUS;
+                surfaceY -
+                BALL_RADIUS;
 
               if (next.vy > 0) {
-                next.vy *= -0.08;
+                next.vy = 0;
               }
 
               const direction =
-                part.flipped ? -1 : 1;
+                part.flipped
+                  ? -1
+                  : 1;
+
+              const targetVelocity =
+                115 *
+                direction;
 
               /*
-               * Move toward a useful conveyor velocity
-               * instead of adding speed forever.
-               */
-              const targetVX =
-                115 * direction;
+               Smooth acceleration rather than
+               instantly changing velocity.
+              */
+
+              const response =
+                Math.min(
+                  1,
+                  5 * dt,
+                );
 
               next.vx +=
-                (targetVX - next.vx) *
-                Math.min(1, 4.5 * dt);
+                (targetVelocity -
+                  next.vx) *
+                response;
             }
 
             continue;
           }
 
-          /*
-           * RAMP / LAUNCHER
-           */
+          /* =====================
+             RAMP / LAUNCHER
+             ===================== */
+
           const direction =
-            part.flipped ? -1 : 1;
+            part.flipped
+              ? -1
+              : 1;
+
+          const halfWidth = 30;
 
           const localX =
-            next.x - centre.x;
+            next.x -
+            centre.x;
 
-          if (Math.abs(localX) > 36) {
+          if (
+            Math.abs(localX) >
+            halfWidth
+          ) {
             continue;
           }
 
           const slope =
-            part.type === "launcher"
-              ? -0.58 * direction
-              : 0.5 * direction;
+            part.type ===
+            "launcher"
+              ? -0.55 *
+                direction
+              : 0.5 *
+                direction;
 
           const surfaceY =
             centre.y +
             localX * slope;
 
           const ballBottom =
-            next.y + BALL_RADIUS;
+            next.y +
+            BALL_RADIUS;
 
           const touchingSurface =
-            ballBottom >= surfaceY - 2 &&
-            ballBottom <= surfaceY + 10;
+            ballBottom >=
+              surfaceY - 3 &&
+            ballBottom <=
+              surfaceY + 9;
 
           if (!touchingSurface) {
             continue;
           }
 
           /*
-           * Put ball exactly on the surface so it
-           * doesn't vibrate inside the ramp.
-           */
-          next.y =
-            surfaceY - BALL_RADIUS;
+           Put ball directly on the ramp.
+           This prevents repeated penetration.
+          */
 
-          if (part.type === "launcher") {
-            if (time >= cooldownUntil) {
+          next.y =
+            surfaceY -
+            BALL_RADIUS;
+
+          /* =====================
+             LAUNCHER
+             ===================== */
+
+          if (
+            part.type ===
+            "launcher"
+          ) {
+            if (
+              time >=
+              cooldownUntil
+            ) {
               next.vy = -175;
 
               next.vx +=
-                72 * direction;
+                75 *
+                direction;
 
               collisionCooldown.current[
                 part.id
-              ] = time + 260;
+              ] =
+                time + 280;
 
-              setActivePart(part.id);
+              setActivePart(
+                part.id,
+              );
 
-              window.setTimeout(() => {
-                setActivePart((current) =>
-                  current === part.id
-                    ? null
-                    : current,
-                );
-              }, 130);
+              window.setTimeout(
+                () => {
+                  setActivePart(
+                    (current) =>
+                      current ===
+                      part.id
+                        ? null
+                        : current,
+                  );
+                },
+                140,
+              );
             }
 
             continue;
           }
 
+          /* =====================
+             RAMP
+             ===================== */
+
           /*
-           * Ramp response.
-           *
-           * Rather than repeatedly bouncing the ball,
-           * gently redirect its velocity along the
-           * surface.
-           */
-          if (next.vy > -30) {
-            const tangentX =
-              direction;
+           Tangent vector for the ramp.
+          */
 
-            const tangentY =
-              0.5;
+          const tangentX =
+            direction;
 
-            const length = Math.hypot(
+          const tangentY = 0.5;
+
+          const tangentLength =
+            Math.hypot(
               tangentX,
               tangentY,
             );
 
-            const tx =
-              tangentX / length;
+          const tx =
+            tangentX /
+            tangentLength;
 
-            const ty =
-              tangentY / length;
+          const ty =
+            tangentY /
+            tangentLength;
 
-            const speedAlongRamp =
-              next.vx * tx +
-              next.vy * ty;
+          const projectedSpeed =
+            next.vx * tx +
+            next.vy * ty;
 
-            const guidedSpeed =
-              Math.max(
-                45,
-                Math.abs(speedAlongRamp),
-              );
+          /*
+           Keep enough velocity to avoid the
+           ball sticking to the ramp.
+          */
 
-            next.vx =
-              tx *
-              guidedSpeed *
-              Math.sign(
-                speedAlongRamp || direction,
-              );
+          const minimumSpeed = 40;
 
-            next.vy =
-              ty *
-              guidedSpeed *
-              Math.sign(
-                speedAlongRamp || direction,
-              );
+          const rampSpeed =
+            Math.max(
+              minimumSpeed,
+              Math.abs(
+                projectedSpeed,
+              ),
+            );
 
-            /*
-             * Prevent ramp contact from feeling sticky.
-             */
-            next.vx +=
-              direction * 9 * dt;
-          }
+          const travelDirection =
+            Math.sign(
+              projectedSpeed ||
+                direction,
+            );
+
+          next.vx =
+            tx *
+            rampSpeed *
+            travelDirection;
+
+          next.vy =
+            ty *
+            rampSpeed *
+            travelDirection;
         }
 
-        /*
-         * FLOOR
-         */
+        /* =====================
+           FLOOR
+           ===================== */
+
         if (
-          next.y + BALL_RADIUS >
+          next.y +
+            BALL_RADIUS >=
           FLOOR_Y
         ) {
           next.y =
-            FLOOR_Y - BALL_RADIUS;
+            FLOOR_Y -
+            BALL_RADIUS;
 
-          if (Math.abs(next.vy) > 32) {
+          if (
+            Math.abs(next.vy) >
+            30
+          ) {
             next.vy =
-              -Math.abs(next.vy) * 0.2;
+              -Math.abs(
+                next.vy,
+              ) * 0.18;
           } else {
             next.vy = 0;
           }
 
+          /*
+           Floor friction.
+          */
+
           next.vx *=
-            Math.pow(0.988, dt * 60);
+            Math.pow(
+              0.985,
+              dt * 60,
+            );
 
           if (
-            Math.abs(next.vx) < 1.5
+            Math.abs(next.vx) <
+            1
           ) {
             next.vx = 0;
           }
         }
 
-        /*
-         * SIDE WALLS
-         */
-        if (
-          next.x - BALL_RADIUS <
-          0
-        ) {
-          next.x = BALL_RADIUS;
-          next.vx =
-            Math.abs(next.vx) * 0.55;
-        }
+        /* =====================
+           LEFT WALL
+           ===================== */
 
         if (
-          next.x + BALL_RADIUS >
+          next.x -
+            BALL_RADIUS <
+          0
+        ) {
+          next.x =
+            BALL_RADIUS;
+
+          next.vx =
+            Math.abs(
+              next.vx,
+            ) * 0.45;
+        }
+
+        /* =====================
+           RIGHT WALL
+           ===================== */
+
+        if (
+          next.x +
+            BALL_RADIUS >
           WIDTH
         ) {
           next.x =
-            WIDTH - BALL_RADIUS;
+            WIDTH -
+            BALL_RADIUS;
+
           next.vx =
-            -Math.abs(next.vx) * 0.55;
+            -Math.abs(
+              next.vx,
+            ) * 0.45;
+        }
+
+        /* =====================
+           CEILING
+           ===================== */
+
+        if (
+          next.y -
+            BALL_RADIUS <
+          0
+        ) {
+          next.y =
+            BALL_RADIUS;
+
+          next.vy =
+            Math.abs(
+              next.vy,
+            ) * 0.35;
         }
       }
 
-      /*
-       * TARGET CHECK
-       */
-      const inBucket =
-        next.x >
-          challenge.bucket.x &&
-        next.x <
-          challenge.bucket.x +
-            challenge.bucket.width &&
-        next.y >
-          challenge.bucket.y;
+      /* ===================================================
+         TARGET DETECTION
+         =================================================== */
 
-      if (inBucket) {
-        liveBall.current = next;
+      const bucketLeft =
+        challenge.bucket.x;
+
+      const bucketRight =
+        challenge.bucket.x +
+        challenge.bucket.width;
+
+      const bucketTop =
+        challenge.bucket.y;
+
+      const bucketBottom =
+        challenge.bucket.y +
+        challenge.bucket.height;
+
+      const ballInsideBucket =
+        next.x >
+          bucketLeft +
+            BALL_RADIUS &&
+        next.x <
+          bucketRight -
+            BALL_RADIUS &&
+        next.y >
+          bucketTop &&
+        next.y <
+          bucketBottom;
+
+      if (ballInsideBucket) {
+        liveBall.current =
+          next;
+
         drawBall(next);
 
         setRunning(false);
         setResult("success");
+
+        animation.current =
+          null;
+
         return;
       }
 
-      /*
-       * Detect a ball that has effectively stopped.
-       * No more waiting around for 18 seconds.
-       */
-      const speed =
-        Math.hypot(next.vx, next.vy);
+      /* ===================================================
+         STOP DETECTION
+         =================================================== */
 
-      const onFloor =
-        next.y + BALL_RADIUS >=
-        FLOOR_Y - 2;
+      const speed =
+        Math.hypot(
+          next.vx,
+          next.vy,
+        );
+
+      const touchingFloor =
+        next.y +
+          BALL_RADIUS >=
+        FLOOR_Y - 1;
 
       if (
-        onFloor &&
-        speed < 8
+        touchingFloor &&
+        speed < 7
       ) {
-        stillTime.current += frameDt;
+        stillTime.current +=
+          frameDt;
       } else {
         stillTime.current = 0;
       }
 
+      /*
+       If the ball has barely moved for 1.25 seconds,
+       stop the attempt.
+      */
+
       if (
-        stillTime.current > 1.2
+        stillTime.current >
+        1.25
       ) {
-        liveBall.current = next;
+        liveBall.current =
+          next;
+
         drawBall(next);
 
         setRunning(false);
         setResult("stopped");
+
+        animation.current =
+          null;
+
         return;
       }
 
       /*
-       * Safety timeout.
-       */
+       Absolute safety timeout.
+      */
+
       if (
         time -
           runStarted.current >
         12000
       ) {
-        liveBall.current = next;
+        liveBall.current =
+          next;
+
         drawBall(next);
 
         setRunning(false);
         setResult("stopped");
+
+        animation.current =
+          null;
+
         return;
       }
 
       liveBall.current = next;
+
       drawBall(next);
 
       animation.current =
-        requestAnimationFrame(step);
+        requestAnimationFrame(
+          step,
+        );
     };
 
     animation.current =
-      requestAnimationFrame(step);
+      requestAnimationFrame(
+        step,
+      );
 
     return () => {
-      if (animation.current) {
+      if (
+        animation.current !==
+        null
+      ) {
         cancelAnimationFrame(
           animation.current,
         );
       }
     };
-  }, [running, parts, challenge]);
+  }, [
+    running,
+    parts,
+    challenge,
+  ]);
+
+  /* =======================================================
+     RUN MACHINE
+     ======================================================= */
 
   const runMachine = () => {
-    if (animation.current) {
+    if (
+      animation.current !==
+      null
+    ) {
       cancelAnimationFrame(
         animation.current,
       );
     }
 
+    animation.current = null;
+
     liveBall.current = {
       ...challenge.start,
     };
 
-    drawBall(challenge.start);
-
     collisionCooldown.current = {};
+
     stillTime.current = 0;
     lastTime.current = 0;
     runStarted.current = 0;
+
+    drawBall(
+      challenge.start,
+    );
 
     setRemoveMode(false);
     setResult("running");
     setRunning(true);
   };
 
+  /* =======================================================
+     RENDER
+     ======================================================= */
+
   return (
-    <div className="machine-panel relative overflow-hidden p-4 sm:p-8">
-      {/* HEADER */}
+    <div className="machine-panel relative overflow-hidden p-4 sm:p-6 lg:p-8">
+      {/* ===================================================
+          HEADER
+          =================================================== */}
+
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border pb-5">
         <div>
           <p className="technical-label">
@@ -875,9 +1370,12 @@ export function ChainReactionGame() {
           </h2>
 
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Place and rotate mechanical components to guide
-            the ball from the launch point into the target
-            bucket. Test, adjust and try again.
+            Place and rotate
+            mechanical components to
+            guide the ball from the
+            launch point into the
+            target bucket. Test,
+            adjust and try again.
           </p>
         </div>
 
@@ -894,19 +1392,27 @@ export function ChainReactionGame() {
         </div>
       </div>
 
-      {/* CHALLENGES */}
+      {/* ===================================================
+          CHALLENGE SELECTOR
+          =================================================== */}
+
       <div
         className="mt-5 flex gap-2 overflow-x-auto pb-2 sm:flex-wrap"
         aria-label="Game challenge selection"
       >
         {challenges.map(
-          (item, index) => (
+          (
+            item,
+            index,
+          ) => (
             <button
               key={item.name}
               type="button"
               disabled={running}
               onClick={() =>
-                selectChallenge(index)
+                selectChallenge(
+                  index,
+                )
               }
               className={`min-h-11 shrink-0 border px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-wider transition-colors ${
                 index ===
@@ -917,7 +1423,10 @@ export function ChainReactionGame() {
             >
               {String(
                 index + 1,
-              ).padStart(2, "0")}{" "}
+              ).padStart(
+                2,
+                "0",
+              )}{" "}
               · {item.name}
             </button>
           ),
@@ -928,8 +1437,15 @@ export function ChainReactionGame() {
         {challenge.description}
       </p>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-[190px_1fr]">
-        {/* COMPONENT TRAY */}
+      {/* ===================================================
+          MAIN GAME LAYOUT
+          =================================================== */}
+
+      <div className="mt-6 grid gap-5 lg:grid-cols-[190px_minmax(0,1fr)]">
+        {/* ===============================================
+            COMPONENT TRAY
+            =============================================== */}
+
         <div>
           <p className="technical-label mb-3">
             Component tray
@@ -944,13 +1460,16 @@ export function ChainReactionGame() {
               <button
                 key={type}
                 type="button"
+                disabled={running}
                 onClick={() => {
                   setSelected(type);
-                  setRemoveMode(false);
+                  setRemoveMode(
+                    false,
+                  );
                 }}
-                disabled={running}
                 className={`flex min-h-14 items-center gap-3 border p-3 text-left transition-colors ${
-                  selected === type &&
+                  selected ===
+                    type &&
                   !removeMode
                     ? "border-primary bg-primary/10"
                     : "border-border bg-card hover:border-primary/60"
@@ -958,23 +1477,26 @@ export function ChainReactionGame() {
               >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-border bg-background font-mono text-lg text-primary">
                   {
-                    partLabels[type]
-                      .icon
+                    partLabels[
+                      type
+                    ].icon
                   }
                 </span>
 
                 <span>
                   <span className="block text-xs font-bold uppercase tracking-wider text-starlight">
                     {
-                      partLabels[type]
-                        .name
+                      partLabels[
+                        type
+                      ].name
                     }
                   </span>
 
                   <span className="mt-1 hidden text-[10px] text-muted-foreground sm:block">
                     {
-                      partLabels[type]
-                        .hint
+                      partLabels[
+                        type
+                      ].hint
                     }
                   </span>
                 </span>
@@ -982,7 +1504,8 @@ export function ChainReactionGame() {
             ))}
           </div>
 
-          {/* MOBILE-FRIENDLY REMOVE MODE */}
+          {/* REMOVE MODE */}
+
           <button
             type="button"
             disabled={running}
@@ -1004,214 +1527,308 @@ export function ChainReactionGame() {
           </button>
 
           <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">
-            Tap an empty cell to place a component.
-            Tap a placed component to rotate it.
-            Use Remove Part to delete components.
+            Tap an empty cell to
+            place a component. Tap a
+            placed component to
+            rotate it. Use Remove Part
+            to delete components.
           </p>
         </div>
 
-        {/* GAME */}
+        {/* ===============================================
+            GAME COLUMN
+            =============================================== */}
+
         <div className="min-w-0">
+          {/*
+            RESPONSIVE GAME BOARD
+
+            The board always maintains a 2:1 ratio.
+
+            Every visual coordinate is expressed as a
+            percentage of WIDTH / HEIGHT so the visual
+            world and physics world remain aligned.
+          */}
+
           <div
             role="application"
-            aria-label="Rube Goldberg machine building area"
+            aria-label="Chain reaction machine building area"
             onPointerUp={
               placePart
             }
-            className="blueprint-grid relative aspect-[2/1] w-full touch-manipulation cursor-crosshair overflow-hidden border border-border bg-background/70"
+            className="blueprint-grid relative aspect-[2/1] w-full touch-manipulation cursor-crosshair select-none overflow-hidden border border-border bg-background/70"
           >
-            {/* START */}
-            <div
-              className="pointer-events-none absolute text-center"
-              style={{
-                left: `${Math.max(
-                  1,
-                  (challenge.start.x /
-                    WIDTH) *
-                    100 -
-                    4,
-                )}%`,
-                top: `${Math.max(
-                  1,
-                  (challenge.start.y /
-                    HEIGHT) *
-                    100 -
-                    8,
-                )}%`,
-              }}
-            >
-              <span className="technical-label">
-                Start
-              </span>
+            {/* ===========================================
+                START MARKER
 
-              <div className="mt-1 h-1 w-16 bg-primary/70" />
-            </div>
+                Uses EXACT same start coordinates as ball.
+                =========================================== */}
 
-            {/* TARGET */}
             <div
-              className="pointer-events-none absolute border-x-4 border-b-4 border-primary/80 bg-primary/10"
+              className="pointer-events-none absolute z-[5] -translate-x-1/2"
               style={{
                 left: `${
-                  (challenge.bucket.x /
+                  (challenge
+                    .start.x /
                     WIDTH) *
                   100
                 }%`,
+
                 top: `${
-                  (challenge.bucket.y /
+                  (challenge
+                    .start.y /
                     HEIGHT) *
                   100
                 }%`,
+              }}
+            >
+              <div className="-translate-y-9 text-center">
+                <span className="font-mono text-[8px] font-bold uppercase tracking-wider text-primary sm:text-[9px]">
+                  Start
+                </span>
+
+                <div className="mx-auto mt-1 h-[2px] w-10 bg-primary/70 sm:w-14" />
+              </div>
+            </div>
+
+            {/* ===========================================
+                TARGET BUCKET
+                =========================================== */}
+
+            <div
+              className="pointer-events-none absolute z-[4] border-x-[3px] border-b-[3px] border-primary/80 bg-primary/10"
+              style={{
+                left: `${
+                  (challenge
+                    .bucket.x /
+                    WIDTH) *
+                  100
+                }%`,
+
+                top: `${
+                  (challenge
+                    .bucket.y /
+                    HEIGHT) *
+                  100
+                }%`,
+
                 width: `${
-                  (challenge.bucket
+                  (challenge
+                    .bucket
                     .width /
                     WIDTH) *
                   100
                 }%`,
+
                 height: `${
-                  (challenge.bucket
+                  (challenge
+                    .bucket
                     .height /
                     HEIGHT) *
                   100
                 }%`,
               }}
             >
-              <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap font-mono text-[8px] uppercase text-primary sm:-top-6 sm:text-[9px]">
+              <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap font-mono text-[7px] font-bold uppercase text-primary sm:-top-6 sm:text-[9px]">
                 Target
               </span>
             </div>
 
-            {/* FLOOR */}
-            <div className="pointer-events-none absolute bottom-[7.3%] left-0 right-0 h-1 bg-border" />
+            {/* ===========================================
+                PHYSICS FLOOR
 
-            {/* COMPONENTS */}
-            {parts.map((part) => {
-              const { x, y } =
-                partPosition(part);
+                This uses FLOOR_Y directly.
 
-              return (
-                <button
-                  key={part.id}
-                  type="button"
-                  aria-label={
-                    part.locked
-                      ? `Fixed ${partLabels[part.type].name}`
-                      : `${partLabels[part.type].name}. Tap to ${
-                          removeMode
-                            ? "remove"
-                            : "rotate"
-                        }.`
-                  }
-                  onPointerUp={(
-                    event,
-                  ) =>
-                    interactWithPart(
-                      event,
-                      part,
-                    )
-                  }
-                  onDoubleClick={(
-                    event,
-                  ) => {
-                    event.stopPropagation();
+                Visual floor and physics floor therefore
+                cannot drift apart.
+                =========================================== */}
 
-                    if (
-                      !part.locked
-                    ) {
-                      removePart(
-                        part.id,
-                      );
-                    }
-                  }}
-                  className={`absolute z-10 flex h-12 w-14 -translate-x-1/2 -translate-y-1/2 touch-manipulation items-center justify-center sm:h-14 sm:w-16 ${
-                    part.locked
-                      ? "cursor-not-allowed opacity-75"
-                      : removeMode
-                        ? "cursor-pointer opacity-60"
-                        : "cursor-pointer"
-                  } ${
-                    activePart ===
-                    part.id
-                      ? "scale-110"
-                      : ""
-                  } transition-transform duration-100`}
-                  style={{
-                    left: `${
-                      (x / WIDTH) *
-                      100
-                    }%`,
-                    top: `${
-                      (y / HEIGHT) *
-                      100
-                    }%`,
-                  }}
-                >
-                  {part.type ===
-                  "bumper" ? (
-                    <span
-                      className={`h-9 w-9 rounded-full border-[3px] border-primary bg-primary/20 sm:h-12 sm:w-12 sm:border-4 ${
-                        activePart ===
-                        part.id
-                          ? "shadow-[0_0_28px_rgba(80,170,255,0.9)]"
-                          : "shadow-[0_0_18px_rgba(80,170,255,0.25)]"
-                      }`}
-                    />
-                  ) : part.type ===
-                    "conveyor" ? (
-                    <span
-                      className={`relative h-5 w-12 border-2 border-primary/80 bg-card sm:h-6 sm:w-16 ${
-                        part.flipped
-                          ? "rotate-180"
-                          : ""
-                      }`}
-                    >
-                      <span className="absolute inset-0 flex items-center justify-around font-mono text-[10px] text-primary sm:text-xs">
-                        › › ›
-                      </span>
-                    </span>
-                  ) : (
-                    <span
-                      className={`relative h-1.5 w-12 bg-primary shadow-[0_0_10px_rgba(80,170,255,0.35)] sm:w-16 ${
-                        part.flipped
-                          ? "-rotate-[28deg]"
-                          : "rotate-[28deg]"
-                      } ${
-                        activePart ===
-                        part.id
-                          ? "shadow-[0_0_22px_rgba(80,170,255,0.9)]"
-                          : ""
-                      }`}
-                    >
-                      {part.type ===
-                        "launcher" && (
-                        <span className="absolute -right-1 -top-2 h-5 w-2 bg-starlight" />
-                      )}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-
-            {/* BALL */}
             <div
-              ref={ballElement}
-              className="pointer-events-none absolute z-20 h-[18px] w-[18px] rounded-full border-2 border-white bg-primary shadow-[0_0_16px_rgba(80,170,255,0.8)]"
+              className="pointer-events-none absolute left-0 right-0 z-[3] h-[2px] bg-border sm:h-[3px]"
               style={{
-                left: 0,
-                top: 0,
-                transform: `translate3d(${
-                  challenge.start.x -
-                  BALL_RADIUS
-                }px, ${
-                  challenge.start.y -
-                  BALL_RADIUS
-                }px, 0)`,
+                top: `${
+                  (FLOOR_Y /
+                    HEIGHT) *
+                  100
+                }%`,
+              }}
+            />
+
+            {/* ===========================================
+                COMPONENTS
+                =========================================== */}
+
+            {parts.map(
+              (part) => {
+                const {
+                  x,
+                  y,
+                } =
+                  partPosition(
+                    part,
+                  );
+
+                const left =
+                  (x / WIDTH) *
+                  100;
+
+                const top =
+                  (y / HEIGHT) *
+                  100;
+
+                return (
+                  <button
+                    key={part.id}
+                    type="button"
+                    aria-label={
+                      part.locked
+                        ? `Fixed ${
+                            partLabels[
+                              part
+                                .type
+                            ]
+                              .name
+                          }`
+                        : `${
+                            partLabels[
+                              part
+                                .type
+                            ]
+                              .name
+                          }. Tap to ${
+                            removeMode
+                              ? "remove"
+                              : "rotate"
+                          }.`
+                    }
+                    onPointerUp={(
+                      event,
+                    ) =>
+                      interactWithPart(
+                        event,
+                        part,
+                      )
+                    }
+                    onDoubleClick={(
+                      event,
+                    ) => {
+                      event.stopPropagation();
+
+                      if (
+                        !part.locked
+                      ) {
+                        removePart(
+                          part.id,
+                        );
+                      }
+                    }}
+                    className={`absolute z-10 flex h-[44px] w-[58px] -translate-x-1/2 -translate-y-1/2 touch-manipulation items-center justify-center ${
+                      part.locked
+                        ? "cursor-not-allowed opacity-75"
+                        : removeMode
+                          ? "cursor-pointer opacity-60"
+                          : "cursor-pointer"
+                    } ${
+                      activePart ===
+                      part.id
+                        ? "scale-110"
+                        : ""
+                    } transition-transform duration-100`}
+                    style={{
+                      left: `${left}%`,
+                      top: `${top}%`,
+                    }}
+                  >
+                    {/* BUMPER */}
+
+                    {part.type ===
+                    "bumper" ? (
+                      <span
+                        className={`h-8 w-8 rounded-full border-[3px] border-primary bg-primary/20 ${
+                          activePart ===
+                          part.id
+                            ? "shadow-[0_0_25px_rgba(229,169,61,0.85)]"
+                            : "shadow-[0_0_12px_rgba(229,169,61,0.25)]"
+                        }`}
+                      />
+                    ) : part.type ===
+                      "conveyor" ? (
+                      /* CONVEYOR */
+
+                      <span
+                        className={`relative h-5 w-12 border-2 border-primary/80 bg-card ${
+                          part.flipped
+                            ? "rotate-180"
+                            : ""
+                        }`}
+                      >
+                        <span className="absolute inset-0 flex items-center justify-around font-mono text-[9px] text-primary">
+                          › › ›
+                        </span>
+                      </span>
+                    ) : (
+                      /* RAMP / LAUNCHER */
+
+                      <span
+                        className={`relative h-[3px] w-12 bg-primary ${
+                          part.flipped
+                            ? "-rotate-[28deg]"
+                            : "rotate-[28deg]"
+                        } ${
+                          activePart ===
+                          part.id
+                            ? "shadow-[0_0_20px_rgba(229,169,61,0.9)]"
+                            : "shadow-[0_0_8px_rgba(229,169,61,0.3)]"
+                        }`}
+                      >
+                        {part.type ===
+                          "launcher" && (
+                          <span className="absolute -right-1 -top-[7px] h-4 w-[6px] bg-starlight" />
+                        )}
+                      </span>
+                    )}
+                  </button>
+                );
+              },
+            )}
+
+            {/* ===========================================
+                BALL
+
+                Position is always a percentage of the
+                same 720 x 360 physics world.
+                =========================================== */}
+
+            <div
+              ref={
+                ballElement
+              }
+              className="pointer-events-none absolute z-20 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-primary shadow-[0_0_14px_rgba(229,169,61,0.8)]"
+              style={{
+                left: `${
+                  (challenge
+                    .start.x /
+                    WIDTH) *
+                  100
+                }%`,
+
+                top: `${
+                  (challenge
+                    .start.y /
+                    HEIGHT) *
+                  100
+                }%`,
+
                 willChange:
-                  "transform",
+                  "left, top",
               }}
             />
           </div>
 
-          {/* STATUS */}
+          {/* ===============================================
+              STATUS
+              =============================================== */}
+
           <div
             className={`mt-3 border-l-2 px-4 py-2 text-sm ${
               result ===
@@ -1223,7 +1840,7 @@ export function ChainReactionGame() {
             {statusText}
           </div>
 
-          <p className="mt-2 font-mono text-[10px] uppercase tracking-wider text-foreground/45">
+          <p className="mt-2 font-mono text-[9px] uppercase tracking-wider text-foreground/45 sm:text-[10px]">
             Fixed components are
             faded and cannot be moved
             · Your parts:{" "}
@@ -1238,35 +1855,52 @@ export function ChainReactionGame() {
         </div>
       </div>
 
-      {/* CONTROLS */}
+      {/* ===================================================
+          BOTTOM CONTROLS
+          =================================================== */}
+
       <div className="mt-6 flex flex-col gap-4 border-t border-border pt-5 sm:flex-row sm:items-center sm:justify-between">
         <p className="max-w-xl text-xs leading-relaxed text-muted-foreground">
-          Experiment with gravity, momentum and
-          component placement. Rotate components to
-          change the path of the ball.
+          Experiment with gravity,
+          momentum and component
+          placement. Rotate components
+          to change the path of the
+          ball.
         </p>
 
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          {/* CLEAR */}
+
           <button
             type="button"
-            onClick={clearMachine}
+            onClick={
+              clearMachine
+            }
             disabled={running}
             className="min-h-11 border border-border px-4 py-3 font-mono text-xs font-bold uppercase text-foreground transition-colors hover:border-primary hover:text-primary disabled:opacity-40"
           >
             Clear
           </button>
 
+          {/* RESET */}
+
           <button
             type="button"
-            onClick={resetBall}
+            onClick={
+              resetBall
+            }
             className="min-h-11 border border-border px-4 py-3 font-mono text-xs font-bold uppercase text-foreground transition-colors hover:border-primary hover:text-primary"
           >
             Reset ball
           </button>
 
+          {/* RUN */}
+
           <button
             type="button"
-            onClick={runMachine}
+            onClick={
+              runMachine
+            }
             disabled={running}
             className="col-span-2 min-h-12 border border-primary bg-primary px-5 py-3 font-mono text-xs font-bold uppercase text-primary-foreground transition-colors hover:bg-background hover:text-primary disabled:opacity-50 sm:col-auto"
           >
@@ -1275,6 +1909,8 @@ export function ChainReactionGame() {
               ? "Run again"
               : "Run machine"}
           </button>
+
+          {/* NEXT CHALLENGE */}
 
           {result ===
             "success" &&
