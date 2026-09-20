@@ -4,7 +4,7 @@ import { awards, education, experience, interests, skills, studentTeams } from "
 import { ChainReactionGame } from "@/components/ChainReactionGame";
 import resumeDocument from "@/assets/documents/vince-osorio-resume.docx.asset.json";
 import projectPortfolio from "@/assets/documents/vince-osorio-project-portfolio.pdf.asset.json";
-import vincePhoto from "../assets/Vince_Osorio.jpg";
+import vincePhoto from "../assets/Vince_Osorio.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -95,14 +95,14 @@ function Index() {
               </p>
             </div>
             <div className="animate-rise-in">
-              <div className="relative overflow-hidden border-2 border-border bg-card">
+              <div className="relative flex h-[480px] items-end justify-center overflow-hidden">
                 <img
                   src={vincePhoto}
                   alt="Vince Christian Osorio"
-                  className="h-[420px] w-full object-cover object-top"
+                  className="h-full w-auto object-contain object-bottom"
                 />
 
-                <div className="absolute bottom-0 left-0 right-0 border-t border-border bg-background/90 px-4 py-3 backdrop-blur-sm">
+                <div className="absolute bottom-0 left-0 right-0 border-t border-border bg-background/80 px-4 py-3 backdrop-blur-sm">
                   <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">
                     Vince Christian Osorio
                   </p>
