@@ -5,8 +5,8 @@ type PartType = "ramp" | "bumper" | "conveyor" | "launcher";
 type Part = {
   id: number;
   type: PartType;
-  col: number;
-  row: number;
+  x: number;
+  y: number;
   flipped: boolean;
   locked?: boolean;
 };
@@ -33,7 +33,6 @@ type Challenge = {
 
 /* =========================================================
    GAME WORLD
-   Everything uses the same 720 x 360 coordinate system.
    ========================================================= */
 
 const WIDTH = 720;
@@ -42,21 +41,19 @@ const HEIGHT = 360;
 const FLOOR_Y = 332;
 const BALL_RADIUS = 8;
 
-/*
-  Fine placement grid.
-
-  24 columns gives a horizontal snap spacing of 30 units.
-  10 rows gives a vertical snap spacing of 28 units.
-*/
-const COLS = 24;
-const ROWS = 10;
-
-const CELL_W = WIDTH / COLS;
-const CELL_H = 28;
-const GRID_TOP = 28;
-
 const GRAVITY = 210;
 const MAX_PARTS = 10;
+
+/*
+  Fine user-placement snapping.
+
+  These values ONLY affect user-created parts.
+  Fixed challenge parts use exact x/y coordinates.
+*/
+const SNAP_X = 15;
+const SNAP_Y = 14;
+
+const PART_HALF_WIDTH = 24;
 
 const partLabels: Record<
   PartType,
@@ -91,13 +88,14 @@ const partLabels: Record<
 /* =========================================================
    CHALLENGES
 
-   Fixed-part coordinates below are adjusted for the finer
-   24 x 10 placement grid.
+   Fixed parts now use real game-world coordinates.
+   Changing SNAP_X / SNAP_Y will NOT move these.
    ========================================================= */
 
 const challenges = [
   {
     name: "Workshop Warm-up",
+
     description:
       "Guide the ball across the shop floor into the bucket on the right.",
 
@@ -119,16 +117,16 @@ const challenges = [
       {
         id: -1,
         type: "ramp",
-        col: 4,
-        row: 3,
+        x: 135,
+        y: 140,
         flipped: false,
         locked: true,
       },
       {
         id: -2,
         type: "bumper",
-        col: 9,
-        row: 7,
+        x: 285,
+        y: 252,
         flipped: false,
         locked: true,
       },
@@ -137,6 +135,7 @@ const challenges = [
 
   {
     name: "High Bucket",
+
     description:
       "Use launchers and bumpers to reach the raised bucket.",
 
@@ -158,16 +157,16 @@ const challenges = [
       {
         id: -3,
         type: "conveyor",
-        col: 7,
-        row: 8,
+        x: 225,
+        y: 280,
         flipped: false,
         locked: true,
       },
       {
         id: -4,
         type: "launcher",
-        col: 14,
-        row: 8,
+        x: 435,
+        y: 280,
         flipped: false,
         locked: true,
       },
@@ -176,6 +175,7 @@ const challenges = [
 
   {
     name: "Reverse Run",
+
     description:
       "The ball starts on the right and the target is on the left.",
 
@@ -197,24 +197,24 @@ const challenges = [
       {
         id: -5,
         type: "ramp",
-        col: 19,
-        row: 3,
+        x: 585,
+        y: 140,
         flipped: true,
         locked: true,
       },
       {
         id: -6,
         type: "bumper",
-        col: 14,
-        row: 6,
+        x: 435,
+        y: 224,
         flipped: false,
         locked: true,
       },
       {
         id: -7,
         type: "conveyor",
-        col: 9,
-        row: 8,
+        x: 285,
+        y: 280,
         flipped: true,
         locked: true,
       },
@@ -223,6 +223,7 @@ const challenges = [
 
   {
     name: "Zigzag Drop",
+
     description:
       "Navigate alternating fixed ramps to reach a centre bucket.",
 
@@ -244,24 +245,24 @@ const challenges = [
       {
         id: -8,
         type: "ramp",
-        col: 4,
-        row: 2,
+        x: 135,
+        y: 98,
         flipped: false,
         locked: true,
       },
       {
         id: -9,
         type: "ramp",
-        col: 9,
-        row: 5,
+        x: 285,
+        y: 182,
         flipped: true,
         locked: true,
       },
       {
         id: -10,
         type: "ramp",
-        col: 14,
-        row: 8,
+        x: 435,
+        y: 266,
         flipped: false,
         locked: true,
       },
@@ -273,19 +274,25 @@ const challenges = [
    HELPERS
    ========================================================= */
 
-function partPosition(part: Part) {
-  return {
-    x: part.col * CELL_W + CELL_W / 2,
-    y: GRID_TOP + part.row * CELL_H + CELL_H / 2,
-  };
-}
-
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
+function snap(value: number, spacing: number) {
+  return Math.round(value / spacing) * spacing;
+}
+
+function distance(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+) {
+  return Math.hypot(x2 - x1, y2 - y1);
+}
+
 /* =========================================================
-   COMPONENT
+   GAME
    ========================================================= */
 
 export function ChainReactionGame() {
@@ -293,7 +300,9 @@ export function ChainReactionGame() {
 
   const challenge = challenges[challengeIndex] ?? challenges[0];
 
-  const [parts, setParts] = useState<Part[]>(challenge.fixedParts);
+  const [parts, setParts] = useState<Part[]>([
+    ...challenge.fixedParts,
+  ]);
 
   const [selected, setSelected] = useState<PartType>("ramp");
 
@@ -305,7 +314,18 @@ export function ChainReactionGame() {
 
   const [removeMode, setRemoveMode] = useState(false);
 
-  const [activePart, setActivePart] = useState<number | null>(null);
+  const [activePart, setActivePart] = useState<number | null>(
+    null,
+  );
+
+  /*
+    Hover preview is desktop-only in practice, but it does
+    not interfere with touch devices.
+  */
+  const [preview, setPreview] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
 
   const nextId = useRef(1);
 
@@ -357,11 +377,11 @@ export function ChainReactionGame() {
       return "Remove mode active — tap a component to remove it.";
     }
 
-    return "Select a component, then tap anywhere above the floor to place it.";
+    return "Select a component, then place it anywhere above the floor.";
   }, [result, removeMode]);
 
   /* =======================================================
-     RESET
+     RESET BALL
      ======================================================= */
 
   const resetBall = () => {
@@ -384,6 +404,7 @@ export function ChainReactionGame() {
     setRunning(false);
     setResult("building");
     setActivePart(null);
+    setPreview(null);
 
     requestAnimationFrame(() => {
       drawBall(challenge.start);
@@ -391,7 +412,7 @@ export function ChainReactionGame() {
   };
 
   /* =======================================================
-     CLEAR
+     CLEAR MACHINE
      ======================================================= */
 
   const clearMachine = () => {
@@ -433,6 +454,7 @@ export function ChainReactionGame() {
     setResult("building");
     setRemoveMode(false);
     setActivePart(null);
+    setPreview(null);
 
     requestAnimationFrame(() => {
       drawBall(nextChallenge.start);
@@ -440,83 +462,128 @@ export function ChainReactionGame() {
   };
 
   /* =======================================================
-     PLACE PART
-
-     Click/touch position is converted from screen pixels
-     back into the 720 x 360 game world.
-
-     Then it snaps to the NEAREST point rather than simply
-     choosing the box that was clicked.
+     POINTER -> GAME COORDINATES
      ======================================================= */
 
-  const placePart = (event: React.PointerEvent<HTMLDivElement>) => {
+  const getPointerPosition = (
+    event: React.PointerEvent<HTMLDivElement>,
+  ) => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+
+    const rawX =
+      ((event.clientX - bounds.left) / bounds.width) * WIDTH;
+
+    const rawY =
+      ((event.clientY - bounds.top) / bounds.height) * HEIGHT;
+
+    /*
+      Fine snapping.
+
+      X = every 15 game units
+      Y = every 14 game units
+    */
+
+    const x = clamp(
+      snap(rawX, SNAP_X),
+      PART_HALF_WIDTH,
+      WIDTH - PART_HALF_WIDTH,
+    );
+
+    const y = clamp(
+      snap(rawY, SNAP_Y),
+      18,
+      FLOOR_Y - 18,
+    );
+
+    return {
+      x,
+      y,
+    };
+  };
+
+  /* =======================================================
+     PREVIEW POSITION
+     ======================================================= */
+
+  const updatePreview = (
+    event: React.PointerEvent<HTMLDivElement>,
+  ) => {
+    if (running || removeMode) {
+      setPreview(null);
+      return;
+    }
+
+    /*
+      Mouse/trackpad gets a placement preview.
+      Touch doesn't need one because there is no hover.
+    */
+
+    if (event.pointerType === "touch") {
+      return;
+    }
+
+    const position = getPointerPosition(event);
+
+    if (position.y >= FLOOR_Y - 12) {
+      setPreview(null);
+      return;
+    }
+
+    setPreview(position);
+  };
+
+  /* =======================================================
+     PLACE PART
+     ======================================================= */
+
+  const placePart = (
+    event: React.PointerEvent<HTMLDivElement>,
+  ) => {
     if (running || removeMode) {
       return;
     }
 
-    const bounds = event.currentTarget.getBoundingClientRect();
+    const position = getPointerPosition(event);
 
-    const x = ((event.clientX - bounds.left) / bounds.width) * WIDTH;
-
-    const y = ((event.clientY - bounds.top) / bounds.height) * HEIGHT;
-
-    /*
-      Do not place anything below the physics floor.
-    */
-
-    if (y >= FLOOR_Y) {
+    if (position.y >= FLOOR_Y - 12) {
       return;
     }
 
-    /*
-      Calculate the last row whose component centre remains
-      safely above the floor.
-    */
-
-    const maxUsableRow = Math.min(
-      ROWS - 1,
-      Math.floor((FLOOR_Y - GRID_TOP - CELL_H / 2) / CELL_H),
-    );
-
-    /*
-      ROUND instead of FLOOR.
-
-      This makes placement snap to the point nearest to
-      where the user actually clicked/tapped.
-    */
-
-    const col = clamp(
-      Math.round((x - CELL_W / 2) / CELL_W),
-      0,
-      COLS - 1,
-    );
-
-    const row = clamp(
-      Math.round((y - GRID_TOP - CELL_H / 2) / CELL_H),
-      0,
-      maxUsableRow,
-    );
-
     setParts((current) => {
-      const occupied = current.some(
-        (part) => part.col === col && part.row === row,
-      );
-
-      if (occupied) {
-        return current;
-      }
-
       const userParts = current.filter((part) => !part.locked);
 
       if (userParts.length >= MAX_PARTS) {
         return current;
       }
 
+      /*
+        Because the snap grid is intentionally very fine,
+        prevent only near-direct overlap.
+
+        This lets components sit much closer together than
+        the previous row/column system.
+      */
+
+      const tooClose = current.some((part) => {
+        return (
+          distance(
+            position.x,
+            position.y,
+            part.x,
+            part.y,
+          ) < 18
+        );
+      });
+
+      if (tooClose) {
+        return current;
+      }
+
       const newPart: Part = {
         id: nextId.current++,
         type: selected,
-        col,
-        row,
+        x: position.x,
+        y: position.y,
         flipped: false,
       };
 
@@ -549,7 +616,9 @@ export function ChainReactionGame() {
     if (running) return;
 
     setParts((current) =>
-      current.filter((part) => part.id !== id || part.locked),
+      current.filter(
+        (part) => part.id !== id || part.locked,
+      ),
     );
   };
 
@@ -588,8 +657,8 @@ export function ChainReactionGame() {
       const rawDt = (time - previousTime) / 1000;
 
       /*
-        Prevent a slow frame from producing a huge physics
-        jump.
+        Cap frame gaps so a lag spike doesn't cause the ball
+        to teleport through a component.
       */
 
       const frameDt = Math.min(rawDt, 0.032);
@@ -597,17 +666,22 @@ export function ChainReactionGame() {
       lastTime.current = time;
 
       /*
-        Smaller substeps improve collision accuracy.
+        More small physics calculations are much more stable
+        than one large calculation per frame.
       */
 
-      const SUBSTEPS = 5;
+      const SUBSTEPS = 6;
       const dt = frameDt / SUBSTEPS;
 
       let next = {
         ...liveBall.current,
       };
 
-      for (let substep = 0; substep < SUBSTEPS; substep++) {
+      for (
+        let substep = 0;
+        substep < SUBSTEPS;
+        substep++
+      ) {
         /* GRAVITY */
 
         next.vy += GRAVITY * dt;
@@ -615,51 +689,65 @@ export function ChainReactionGame() {
         next.x += next.vx * dt;
         next.y += next.vy * dt;
 
-        /* COMPONENTS */
+        /* ===============================================
+           COMPONENT COLLISIONS
+           =============================================== */
 
         for (const part of parts) {
-          const centre = partPosition(part);
+          const centreX = part.x;
+          const centreY = part.y;
 
           const cooldownUntil =
             collisionCooldown.current[part.id] ?? 0;
 
-          /* =================================================
+          /* =============================================
              BUMPER
-             ================================================= */
+             ============================================= */
 
           if (part.type === "bumper") {
-            const dx = next.x - centre.x;
-            const dy = next.y - centre.y;
+            const dx = next.x - centreX;
+            const dy = next.y - centreY;
 
-            const distance = Math.hypot(dx, dy);
+            const ballDistance = Math.hypot(dx, dy);
 
-            const bumperRadius = 18;
+            const bumperRadius = 15;
 
-            const collisionDistance = bumperRadius + BALL_RADIUS;
+            const collisionDistance =
+              bumperRadius + BALL_RADIUS;
 
-            if (distance < collisionDistance && distance > 0) {
-              const nx = dx / distance;
-              const ny = dy / distance;
+            if (
+              ballDistance < collisionDistance &&
+              ballDistance > 0
+            ) {
+              const nx = dx / ballDistance;
+              const ny = dy / ballDistance;
 
-              /*
-                Push the ball outside the bumper first.
-              */
+              next.x =
+                centreX + nx * collisionDistance;
 
-              next.x = centre.x + nx * collisionDistance;
-              next.y = centre.y + ny * collisionDistance;
+              next.y =
+                centreY + ny * collisionDistance;
 
-              const approach = next.vx * nx + next.vy * ny;
+              const approach =
+                next.vx * nx + next.vy * ny;
 
-              if (approach < 0 && time >= cooldownUntil) {
-                const restitution = 1.55;
+              if (
+                approach < 0 &&
+                time >= cooldownUntil
+              ) {
+                const restitution = 1.5;
 
-                next.vx -= restitution * approach * nx;
-                next.vy -= restitution * approach * ny;
+                next.vx -=
+                  restitution * approach * nx;
 
-                next.vx += nx * 15;
-                next.vy += ny * 15;
+                next.vy -=
+                  restitution * approach * ny;
 
-                collisionCooldown.current[part.id] = time + 100;
+                next.vx += nx * 14;
+                next.vy += ny * 14;
+
+                collisionCooldown.current[part.id] =
+                  time + 100;
 
                 setActivePart(part.id);
 
@@ -674,23 +762,27 @@ export function ChainReactionGame() {
             continue;
           }
 
-          /* =================================================
+          /* =============================================
              CONVEYOR
-             ================================================= */
+             ============================================= */
 
           if (part.type === "conveyor") {
-            const halfWidth = 24;
+            const halfWidth = 22;
 
-            const surfaceY = centre.y - 7;
+            const surfaceY = centreY - 7;
 
             const horizontal =
-              Math.abs(next.x - centre.x) <= halfWidth;
+              Math.abs(next.x - centreX) <= halfWidth;
 
             const touching =
-              next.y + BALL_RADIUS >= surfaceY - 3 &&
+              next.y + BALL_RADIUS >= surfaceY - 4 &&
               next.y + BALL_RADIUS <= surfaceY + 8;
 
-            if (horizontal && touching && next.vy >= -15) {
+            if (
+              horizontal &&
+              touching &&
+              next.vy >= -15
+            ) {
               next.y = surfaceY - BALL_RADIUS;
 
               if (next.vy > 0) {
@@ -703,26 +795,22 @@ export function ChainReactionGame() {
 
               const response = Math.min(1, 5 * dt);
 
-              next.vx += (targetVelocity - next.vx) * response;
+              next.vx +=
+                (targetVelocity - next.vx) * response;
             }
 
             continue;
           }
 
-          /* =================================================
+          /* =============================================
              RAMP / LAUNCHER
-             ================================================= */
+             ============================================= */
 
           const direction = part.flipped ? -1 : 1;
 
-          /*
-            Slightly shorter than before to work better with
-            the finer placement grid.
-          */
+          const halfWidth = 22;
 
-          const halfWidth = 24;
-
-          const localX = next.x - centre.x;
+          const localX = next.x - centreX;
 
           if (Math.abs(localX) > halfWidth) {
             continue;
@@ -733,12 +821,12 @@ export function ChainReactionGame() {
               ? -0.55 * direction
               : 0.5 * direction;
 
-          const surfaceY = centre.y + localX * slope;
+          const surfaceY = centreY + localX * slope;
 
           const ballBottom = next.y + BALL_RADIUS;
 
           const touchingSurface =
-            ballBottom >= surfaceY - 3 &&
+            ballBottom >= surfaceY - 4 &&
             ballBottom <= surfaceY + 9;
 
           if (!touchingSurface) {
@@ -747,7 +835,9 @@ export function ChainReactionGame() {
 
           next.y = surfaceY - BALL_RADIUS;
 
-          /* LAUNCHER */
+          /* =============================================
+             LAUNCHER
+             ============================================= */
 
           if (part.type === "launcher") {
             if (time >= cooldownUntil) {
@@ -755,7 +845,8 @@ export function ChainReactionGame() {
 
               next.vx += 75 * direction;
 
-              collisionCooldown.current[part.id] = time + 280;
+              collisionCooldown.current[part.id] =
+                time + 280;
 
               setActivePart(part.id);
 
@@ -769,17 +860,23 @@ export function ChainReactionGame() {
             continue;
           }
 
-          /* RAMP */
+          /* =============================================
+             RAMP
+             ============================================= */
 
           const tangentX = direction;
           const tangentY = 0.5;
 
-          const tangentLength = Math.hypot(tangentX, tangentY);
+          const tangentLength = Math.hypot(
+            tangentX,
+            tangentY,
+          );
 
           const tx = tangentX / tangentLength;
           const ty = tangentY / tangentLength;
 
-          const projectedSpeed = next.vx * tx + next.vy * ty;
+          const projectedSpeed =
+            next.vx * tx + next.vy * ty;
 
           const minimumSpeed = 40;
 
@@ -792,16 +889,16 @@ export function ChainReactionGame() {
             projectedSpeed || direction,
           );
 
-          next.vx = tx * rampSpeed * travelDirection;
-          next.vy = ty * rampSpeed * travelDirection;
+          next.vx =
+            tx * rampSpeed * travelDirection;
+
+          next.vy =
+            ty * rampSpeed * travelDirection;
         }
 
-        /* =================================================
+        /* ===============================================
            FLOOR
-
-           FLOOR_Y is also used to DRAW the floor, so the
-           visible floor and collision floor are identical.
-           ================================================= */
+           =============================================== */
 
         if (next.y + BALL_RADIUS >= FLOOR_Y) {
           next.y = FLOOR_Y - BALL_RADIUS;
@@ -811,6 +908,10 @@ export function ChainReactionGame() {
           } else {
             next.vy = 0;
           }
+
+          /*
+            Gentle floor friction.
+          */
 
           next.vx *= Math.pow(0.985, dt * 60);
 
@@ -823,7 +924,6 @@ export function ChainReactionGame() {
 
         if (next.x - BALL_RADIUS < 0) {
           next.x = BALL_RADIUS;
-
           next.vx = Math.abs(next.vx) * 0.45;
         }
 
@@ -831,7 +931,6 @@ export function ChainReactionGame() {
 
         if (next.x + BALL_RADIUS > WIDTH) {
           next.x = WIDTH - BALL_RADIUS;
-
           next.vx = -Math.abs(next.vx) * 0.45;
         }
 
@@ -839,7 +938,6 @@ export function ChainReactionGame() {
 
         if (next.y - BALL_RADIUS < 0) {
           next.y = BALL_RADIUS;
-
           next.vy = Math.abs(next.vy) * 0.35;
         }
       }
@@ -849,12 +947,19 @@ export function ChainReactionGame() {
          =================================================== */
 
       const bucketLeft = challenge.bucket.x;
+
       const bucketRight =
         challenge.bucket.x + challenge.bucket.width;
 
       const bucketTop = challenge.bucket.y;
+
       const bucketBottom =
         challenge.bucket.y + challenge.bucket.height;
+
+      /*
+        The ball only needs its centre to enter safely
+        between the walls of the bucket.
+      */
 
       const ballInsideBucket =
         next.x > bucketLeft + BALL_RADIUS &&
@@ -959,9 +1064,64 @@ export function ChainReactionGame() {
 
     drawBall(challenge.start);
 
+    setPreview(null);
     setRemoveMode(false);
     setResult("running");
     setRunning(true);
+  };
+
+  /* =======================================================
+     RENDER PART
+     ======================================================= */
+
+  const renderPartGraphic = (
+    type: PartType,
+    flipped: boolean,
+    active = false,
+  ) => {
+    if (type === "bumper") {
+      return (
+        <span
+          className={`h-7 w-7 rounded-full border-[3px] border-primary bg-primary/20 ${
+            active
+              ? "shadow-[0_0_25px_rgba(229,169,61,0.85)]"
+              : "shadow-[0_0_12px_rgba(229,169,61,0.25)]"
+          }`}
+        />
+      );
+    }
+
+    if (type === "conveyor") {
+      return (
+        <span
+          className={`relative h-5 w-10 border-2 border-primary/80 bg-card ${
+            flipped ? "rotate-180" : ""
+          }`}
+        >
+          <span className="absolute inset-0 flex items-center justify-around font-mono text-[8px] text-primary">
+            › › ›
+          </span>
+        </span>
+      );
+    }
+
+    return (
+      <span
+        className={`relative h-[3px] w-10 bg-primary ${
+          flipped
+            ? "-rotate-[28deg]"
+            : "rotate-[28deg]"
+        } ${
+          active
+            ? "shadow-[0_0_20px_rgba(229,169,61,0.9)]"
+            : "shadow-[0_0_8px_rgba(229,169,61,0.3)]"
+        }`}
+      >
+        {type === "launcher" && (
+          <span className="absolute -right-1 -top-[7px] h-4 w-[6px] bg-starlight" />
+        )}
+      </span>
+    );
   };
 
   /* =======================================================
@@ -1001,7 +1161,7 @@ export function ChainReactionGame() {
         </div>
       </div>
 
-      {/* CHALLENGE SELECTOR */}
+      {/* CHALLENGES */}
 
       <div
         className="mt-5 flex gap-2 overflow-x-auto pb-2 sm:flex-wrap"
@@ -1073,7 +1233,7 @@ export function ChainReactionGame() {
             )}
           </div>
 
-          {/* REMOVE MODE */}
+          {/* REMOVE */}
 
           <button
             type="button"
@@ -1091,10 +1251,9 @@ export function ChainReactionGame() {
           </button>
 
           <p className="mt-3 text-[10px] leading-relaxed text-muted-foreground">
-            Tap anywhere above the floor to place a component.
-            Components snap to the nearest fine-grid point. Tap
-            a placed component to rotate it. Use Remove Part to
-            delete components.
+            Tap almost anywhere above the floor to place a
+            component. Parts use fine snapping for more precise
+            placement. Tap a part to rotate it.
           </p>
         </div>
 
@@ -1104,8 +1263,10 @@ export function ChainReactionGame() {
           <div
             role="application"
             aria-label="Chain reaction machine building area"
+            onPointerMove={updatePreview}
+            onPointerLeave={() => setPreview(null)}
             onPointerUp={placePart}
-            className="blueprint-grid relative aspect-[2/1] w-full touch-manipulation cursor-crosshair select-none overflow-hidden border border-border bg-background/70"
+            className="blueprint-grid relative aspect-[2/1] w-full touch-none cursor-crosshair select-none overflow-hidden border border-border bg-background/70"
           >
             {/* START */}
 
@@ -1154,93 +1315,64 @@ export function ChainReactionGame() {
               }}
             />
 
-            {/* PARTS */}
+            {/* PLACEMENT PREVIEW */}
 
-            {parts.map((part) => {
-              const { x, y } = partPosition(part);
+            {preview && !running && !removeMode && (
+              <div
+                className="pointer-events-none absolute z-[8] flex h-[40px] w-[48px] -translate-x-1/2 -translate-y-1/2 items-center justify-center opacity-35"
+                style={{
+                  left: `${(preview.x / WIDTH) * 100}%`,
+                  top: `${(preview.y / HEIGHT) * 100}%`,
+                }}
+              >
+                {renderPartGraphic(selected, false)}
+              </div>
+            )}
 
-              const left = (x / WIDTH) * 100;
-              const top = (y / HEIGHT) * 100;
+            {/* COMPONENTS */}
 
-              return (
-                <button
-                  key={part.id}
-                  type="button"
-                  aria-label={
-                    part.locked
-                      ? `Fixed ${partLabels[part.type].name}`
-                      : `${partLabels[part.type].name}. Tap to ${
-                          removeMode ? "remove" : "rotate"
-                        }.`
+            {parts.map((part) => (
+              <button
+                key={part.id}
+                type="button"
+                aria-label={
+                  part.locked
+                    ? `Fixed ${partLabels[part.type].name}`
+                    : `${partLabels[part.type].name}. Tap to ${
+                        removeMode ? "remove" : "rotate"
+                      }.`
+                }
+                onPointerUp={(event) =>
+                  interactWithPart(event, part)
+                }
+                onDoubleClick={(event) => {
+                  event.stopPropagation();
+
+                  if (!part.locked) {
+                    removePart(part.id);
                   }
-                  onPointerUp={(event) =>
-                    interactWithPart(event, part)
-                  }
-                  onDoubleClick={(event) => {
-                    event.stopPropagation();
-
-                    if (!part.locked) {
-                      removePart(part.id);
-                    }
-                  }}
-                  className={`absolute z-10 flex h-[40px] w-[48px] -translate-x-1/2 -translate-y-1/2 touch-manipulation items-center justify-center ${
-                    part.locked
-                      ? "cursor-not-allowed opacity-75"
-                      : removeMode
-                        ? "cursor-pointer opacity-60"
-                        : "cursor-pointer"
-                  } ${
-                    activePart === part.id ? "scale-110" : ""
-                  } transition-transform duration-100`}
-                  style={{
-                    left: `${left}%`,
-                    top: `${top}%`,
-                  }}
-                >
-                  {/* BUMPER */}
-
-                  {part.type === "bumper" ? (
-                    <span
-                      className={`h-7 w-7 rounded-full border-[3px] border-primary bg-primary/20 ${
-                        activePart === part.id
-                          ? "shadow-[0_0_25px_rgba(229,169,61,0.85)]"
-                          : "shadow-[0_0_12px_rgba(229,169,61,0.25)]"
-                      }`}
-                    />
-                  ) : part.type === "conveyor" ? (
-                    /* CONVEYOR */
-
-                    <span
-                      className={`relative h-5 w-10 border-2 border-primary/80 bg-card ${
-                        part.flipped ? "rotate-180" : ""
-                      }`}
-                    >
-                      <span className="absolute inset-0 flex items-center justify-around font-mono text-[8px] text-primary">
-                        › › ›
-                      </span>
-                    </span>
-                  ) : (
-                    /* RAMP / LAUNCHER */
-
-                    <span
-                      className={`relative h-[3px] w-10 bg-primary ${
-                        part.flipped
-                          ? "-rotate-[28deg]"
-                          : "rotate-[28deg]"
-                      } ${
-                        activePart === part.id
-                          ? "shadow-[0_0_20px_rgba(229,169,61,0.9)]"
-                          : "shadow-[0_0_8px_rgba(229,169,61,0.3)]"
-                      }`}
-                    >
-                      {part.type === "launcher" && (
-                        <span className="absolute -right-1 -top-[7px] h-4 w-[6px] bg-starlight" />
-                      )}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+                }}
+                className={`absolute z-10 flex h-[40px] w-[48px] -translate-x-1/2 -translate-y-1/2 touch-manipulation items-center justify-center ${
+                  part.locked
+                    ? "cursor-not-allowed opacity-75"
+                    : removeMode
+                      ? "cursor-pointer opacity-60"
+                      : "cursor-pointer"
+                } ${
+                  activePart === part.id ? "scale-110" : ""
+                } transition-transform duration-100`}
+                style={{
+                  left: `${(part.x / WIDTH) * 100}%`,
+                  top: `${(part.y / HEIGHT) * 100}%`,
+                }}
+              >
+                {renderPartGraphic(
+                  part.type,
+                  part.flipped,
+                  activePart === part.id,
+                )}
+              </button>
+            ))}
 
             {/* BALL */}
 
@@ -1269,8 +1401,7 @@ export function ChainReactionGame() {
 
           <p className="mt-2 font-mono text-[9px] uppercase tracking-wider text-foreground/45 sm:text-[10px]">
             Fixed components are faded and cannot be moved · Your
-            parts:{" "}
-            {parts.filter((part) => !part.locked).length}/
+            parts: {parts.filter((part) => !part.locked).length}/
             {MAX_PARTS}
           </p>
         </div>
