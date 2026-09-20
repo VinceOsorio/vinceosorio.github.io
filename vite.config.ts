@@ -11,9 +11,9 @@ export default defineConfig({
     // Generate static HTML so the site can be hosted on GitHub Pages
     prerender: {
       enabled: true,
-      crawlLinks: true,
+      crawlLinks: false,
     },
-
+    
     server: { entry: "server" },
   },
 });
